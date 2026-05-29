@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.0
+
+- Add `--format inventory` to map agentic repository surfaces by workflows, agent context files, and MCP configs.
+- Scan GitHub Copilot custom agents, reusable prompts, and repository skills under `.github/agents`, `.github/prompts`, and `.github/skills`.
+- Add a scope expansion roadmap for policy mode, agent capability SBOMs, trend reports, and adoption tooling.
+
 ## 1.4.0
 
 - Add `AWG013` for project MCP configs that start mutable packages, unpinned containers, or shell wrappers.

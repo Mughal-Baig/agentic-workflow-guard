@@ -113,7 +113,7 @@ jobs:
 ## CLI
 
 ```bash
-awguard [path] [--config file] [--preset name] [--format text|json|markdown|github|sarif|graph|html|migration|score|badge] [--output file] [--baseline file] [--write-baseline file] [--fix-dry-run] [--fail-on none|low|medium|high|critical]
+awguard [path] [--config file] [--preset name] [--format text|json|markdown|github|sarif|graph|html|migration|score|badge|inventory] [--output file] [--baseline file] [--write-baseline file] [--fix-dry-run] [--fail-on none|low|medium|high|critical]
 ```
 
 Examples:
@@ -124,6 +124,7 @@ node ./bin/awguard.js . --config awguard.config.json
 node ./bin/awguard.js . --preset strict --format graph
 node ./bin/awguard.js . --format html --output awguard-report.html
 node ./bin/awguard.js . --format migration --output awguard-migration.md
+node ./bin/awguard.js . --format inventory
 node ./bin/awguard.js . --format score
 node ./bin/awguard.js . --format badge --output awguard-badge.json
 node ./bin/awguard.js . --fix-dry-run
@@ -241,6 +242,16 @@ Then add a badge to your README:
 
 The score starts at 100 and subtracts risk for critical, high, medium, and low findings. This makes AWGuard easy to show in a README without hiding the detailed SARIF, graph, and migration reports.
 
+## Agentic Surface Inventory
+
+Generate a repository map of agent-related surfaces:
+
+```bash
+node ./bin/awguard.js . --format inventory
+```
+
+The inventory groups scanned files into GitHub Actions workflows, persistent agent context files, and MCP configs. It shows which surfaces exist, which rules fired, and what to review next. This is useful before a team enables new coding agents because it answers: "Where can agents read instructions, get tools, or act in CI?"
+
 ## Agent Context Guard
 
 AWGuard also scans persistent agent instruction files:
@@ -251,6 +262,9 @@ AWGuard also scans persistent agent instruction files:
 - `GEMINI.md`
 - `.github/copilot-instructions.md`
 - `.github/instructions/*.instructions.md`
+- `.github/agents/*.md`
+- `.github/prompts/*.prompt.md`
+- `.github/skills/**/SKILL.md`
 - `.cursor/rules/*.{md,mdc,txt}`
 - `.cursorrules`, `.windsurfrules`, and `.clinerules`
 
@@ -330,6 +344,9 @@ If you omit rule ids, the suppression applies to all findings on the target line
 - Hosted AWI score API for dynamic cross-repository badges.
 - Agent instruction file rule packs for Copilot, Claude Code, Codex, Gemini, Cursor, and Windsurf.
 - MCP config rule packs for Claude Code, Copilot, VS Code, Cursor, Windsurf, Cline, and Roo.
+- Policy mode for approved MCP packages, actions, token scopes, and agent context files.
+- Agent capability SBOM for prompts, tools, MCP servers, permissions, and write paths.
+- Trend reports that show newly added agent surfaces and newly introduced findings.
 - GitHub App integration for always-on repository monitoring.
 - Rule packs for Claude Code, Codex, Gemini, Copilot, Aider, and custom agents.
 - Public vulnerable workflow lab with attack and fix walkthroughs.
@@ -337,3 +354,4 @@ If you omit rule ids, the suppression applies to all findings on the target line
 ## Research Backing
 
 See [docs/market-analysis.md](docs/market-analysis.md) for the demand analysis, gap, audience, and launch plan.
+See [docs/roadmap.md](docs/roadmap.md) for the scope expansion roadmap.

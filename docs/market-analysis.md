@@ -197,6 +197,24 @@ Agentic Workflow Guard now supports:
 
 This keeps the project focused: AWGuard does not try to replace MCP runtime scanners. It gives maintainers a GitHub-native, zero-dependency first check before an agent or scanner executes repo-provided MCP server commands.
 
+## Deep Research Refresh: Agentic Surface Inventory
+
+The next scope expansion is an inventory view. GitHub now documents repository-level custom agents in `.github/agents`, Copilot MCP configuration, and custom instructions. VS Code documents workspace MCP config. This means the repository itself can contain multiple agent-control surfaces before a single workflow runs.
+
+The useful maintainer question is no longer only "is this workflow unsafe?" It is:
+
+```text
+what agent surfaces does this repository expose, and which ones changed?
+```
+
+Agentic Workflow Guard now supports:
+
+- `--format inventory` for a surface map grouped by workflows, agent context files, and MCP configs.
+- scanning `.github/agents/*.md`, `.github/prompts/*.prompt.md`, and `.github/skills/**/SKILL.md` as persistent agent context.
+- a roadmap that moves toward policy mode, agent capability SBOMs, trend reports, and adoption generators.
+
+This widens the project while preserving its niche: AWGuard remains a zero-execution repository scanner for agentic risk, not a broad runtime agent firewall.
+
 ## Distribution Plan
 
 1. Publish the repo with a short demo GIF or screenshot.

@@ -306,6 +306,13 @@ export function scanMcpConfigText(text, file = '.mcp.json', root = process.cwd()
   return context.findings;
 }
 
+export function classifyScanFile(file, root = process.cwd()) {
+  if (isMcpConfigFile(file, root)) return 'mcp-config';
+  if (isAgentInstructionFile(file, root)) return 'agent-context';
+  if (workflowExtensions.has(path.extname(file))) return 'github-workflow';
+  return 'other';
+}
+
 function scanFile(file, root, config) {
   const text = fs.readFileSync(file, 'utf8');
   if (isAgentInstructionFile(file, root)) {
@@ -831,6 +838,21 @@ function discoverAgentInstructionFiles(root) {
     files.push(...walk(githubInstructionsDir).filter((file) => file.endsWith('.instructions.md')));
   }
 
+  const githubAgentsDir = path.join(root, '.github', 'agents');
+  if (fs.existsSync(githubAgentsDir)) {
+    files.push(...walk(githubAgentsDir).filter((file) => file.endsWith('.md')));
+  }
+
+  const githubPromptsDir = path.join(root, '.github', 'prompts');
+  if (fs.existsSync(githubPromptsDir)) {
+    files.push(...walk(githubPromptsDir).filter((file) => file.endsWith('.prompt.md')));
+  }
+
+  const githubSkillsDir = path.join(root, '.github', 'skills');
+  if (fs.existsSync(githubSkillsDir)) {
+    files.push(...walk(githubSkillsDir).filter((file) => path.basename(file).toLowerCase() === 'skill.md'));
+  }
+
   const cursorRulesDir = path.join(root, '.cursor', 'rules');
   if (fs.existsSync(cursorRulesDir)) {
     files.push(...walk(cursorRulesDir).filter((file) => ['.md', '.mdc', '.txt'].includes(path.extname(file))));
@@ -859,6 +881,12 @@ function isAgentInstructionFile(file, root) {
     /\/\.github\/copilot-instructions\.md$/i.test(normalizedFile) ||
     /^\.github\/instructions\/.+\.instructions\.md$/i.test(relativeFile) ||
     /\/\.github\/instructions\/.+\.instructions\.md$/i.test(normalizedFile) ||
+    /^\.github\/agents\/.+\.md$/i.test(relativeFile) ||
+    /\/\.github\/agents\/.+\.md$/i.test(normalizedFile) ||
+    /^\.github\/prompts\/.+\.prompt\.md$/i.test(relativeFile) ||
+    /\/\.github\/prompts\/.+\.prompt\.md$/i.test(normalizedFile) ||
+    /^\.github\/skills\/.+\/skill\.md$/i.test(relativeFile) ||
+    /\/\.github\/skills\/.+\/skill\.md$/i.test(normalizedFile) ||
     /^\.cursor\/rules\/.+\.(?:md|mdc|txt)$/i.test(relativeFile) ||
     /\/\.cursor\/rules\/.+\.(?:md|mdc|txt)$/i.test(normalizedFile)
   );

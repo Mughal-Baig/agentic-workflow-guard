@@ -7,7 +7,7 @@ inputs:
     required: false
     default: .
   format:
-    description: Output format: github, text, json, markdown, sarif, graph, html, migration, score, or badge.
+    description: Output format: github, text, json, markdown, sarif, graph, html, migration, score, badge, or inventory.
     required: false
     default: github
   fail-on:

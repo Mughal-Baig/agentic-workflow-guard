@@ -39,20 +39,27 @@ Short pitch:
    ```
 
 9. Show the README badge and say: "Add an AWI risk badge to your repo before adding AI agents to CI."
-10. Show an unsafe `AGENTS.md` or `.github/copilot-instructions.md` line and run:
+10. Run:
+
+   ```bash
+   node ./bin/awguard.js . --format inventory
+   ```
+
+11. Show the surface map and say: "Before you secure agent workflows, find every place the repository gives agents instructions or tools."
+12. Show an unsafe `AGENTS.md` or `.github/copilot-instructions.md` line and run:
 
    ```bash
    node ./bin/awguard.js . --format text
    ```
 
-11. Explain that AWGuard scans both the workflow and the persistent agent instructions that shape agent behavior.
-12. Show an unsafe `.mcp.json` with `npx @modelcontextprotocol/server-github` and a committed token, then run:
+13. Explain that AWGuard scans both the workflow and the persistent agent instructions that shape agent behavior.
+14. Show an unsafe `.mcp.json` with `npx @modelcontextprotocol/server-github` and a committed token, then run:
 
    ```bash
    node ./bin/awguard.js examples/.mcp.json --format text
    ```
 
-13. Explain the new hook: "This scanner checks repo-provided MCP tool wiring without executing the MCP server."
+15. Explain the new hook: "This scanner checks repo-provided MCP tool wiring without executing the MCP server."
 
 ## Release Checklist
 

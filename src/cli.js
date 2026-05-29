@@ -5,12 +5,24 @@ import { applyBaseline, createBaseline, loadBaseline, writeBaseline } from './ba
 import { loadConfig } from './config.js';
 import { renderFixDryRun } from './remediation.js';
 import { scanWorkflows, severityRank } from './scanner.js';
-import { renderBadge, renderGithubAnnotations, renderGraph, renderHtml, renderJson, renderMarkdown, renderMigration, renderSarif, renderScore, renderText } from './reporters.js';
+import {
+  renderBadge,
+  renderGithubAnnotations,
+  renderGraph,
+  renderHtml,
+  renderJson,
+  renderMarkdown,
+  renderMigration,
+  renderSarif,
+  renderScore,
+  renderSurfaceInventory,
+  renderText
+} from './reporters.js';
 
 const HELP = `Agentic Workflow Guard
 
 Usage:
-  awguard [path] [--config file] [--preset name] [--format text|json|markdown|github|sarif|graph|html|migration|score|badge] [--output file] [--baseline file] [--write-baseline file] [--fix-dry-run] [--fail-on none|low|medium|high|critical]
+  awguard [path] [--config file] [--preset name] [--format text|json|markdown|github|sarif|graph|html|migration|score|badge|inventory] [--output file] [--baseline file] [--write-baseline file] [--fix-dry-run] [--fail-on none|low|medium|high|critical]
 
 Examples:
   awguard .
@@ -20,6 +32,7 @@ Examples:
   awguard .github/workflows/agent.yml --format markdown --fail-on high
   awguard . --format html --output awguard-report.html
   awguard . --format migration --output awguard-migration.md
+  awguard . --format inventory
   awguard . --format score
   awguard . --format badge --output awguard-badge.json
   awguard . --fix-dry-run
@@ -121,7 +134,19 @@ export function parseArgs(args, env = {}) {
     }
   }
 
-  validateEnum('format', options.format, ['text', 'json', 'markdown', 'github', 'sarif', 'graph', 'html', 'migration', 'score', 'badge']);
+  validateEnum('format', options.format, [
+    'text',
+    'json',
+    'markdown',
+    'github',
+    'sarif',
+    'graph',
+    'html',
+    'migration',
+    'score',
+    'badge',
+    'inventory'
+  ]);
   validateEnum('fail-on', options.failOn, ['none', 'low', 'medium', 'high', 'critical']);
 
   return options;
@@ -141,6 +166,7 @@ function render(result, format) {
   if (format === 'migration') return renderMigration(result);
   if (format === 'score') return renderScore(result);
   if (format === 'badge') return renderBadge(result);
+  if (format === 'inventory') return renderSurfaceInventory(result);
   if (format === 'github') return renderGithubAnnotations(result);
   return renderText(result);
 }

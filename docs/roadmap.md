@@ -1,0 +1,71 @@
+# Scope Expansion Roadmap
+
+## Research Signal
+
+AWGuard should widen from "workflow scanner" into an agentic repository safety map while staying small and zero-dependency.
+
+Current research points:
+
+- GitHub Copilot now documents repository-level custom agents in `.github/agents`, repository MCP configuration, and repo-scoped agent behavior.
+- VS Code and Copilot document MCP configuration in repository or workspace files such as `.vscode/mcp.json`.
+- GitHub Actions security docs still warn that attacker-controlled GitHub context must be treated as untrusted input.
+- OpenSSF Scorecard shows that security tools travel further when they produce a simple public score, badge, and clear adoption path.
+- Existing MCP scanners focus on live server/tool inspection; AWGuard's lane is zero-execution repository scanning before those tools start.
+
+## Feature List
+
+1. Agentic Surface Inventory
+   - Add `--format inventory`.
+   - Group scanned files into GitHub Actions workflows, agent context files, and MCP configs.
+   - Show findings, highest severity, and recommended next steps per surface.
+
+2. Wider Agent Context Coverage
+   - Scan `.github/agents/*.md` for Copilot custom agents.
+   - Scan `.github/prompts/*.prompt.md` for reusable prompts.
+   - Scan `.github/skills/**/SKILL.md` for repository skills.
+   - Keep using `AWG012` for risky persistent instructions.
+
+3. Policy Mode
+   - Add an `awguard.policy.json` format for explicit allowlists.
+   - Allow approved MCP commands, package pins, Docker digests, action owners, and workflow write scopes.
+   - Report drift when the repository adds a new agent surface without policy.
+
+4. Setup And Adoption Generator
+   - Add a command that prints a starter GitHub Action, strict config, baseline command, and badge snippet.
+   - Keep it as a print-only generator first so it remains safe.
+
+5. Agent Capability SBOM
+   - Export a machine-readable inventory of agent prompts, tools, MCP servers, permissions, secrets exposure, and write capabilities.
+   - Make it useful for security reviews and audits.
+
+6. Trend Reports
+   - Compare current scan output with a previous JSON report.
+   - Show newly added agent surfaces and newly introduced rules.
+
+7. Vulnerable Lab
+   - Add a set of intentionally unsafe mini-repositories under examples or a separate demo repo.
+   - Each lab should include exploit explanation, AWGuard output, and fixed pattern.
+
+8. GitHub App Or Scheduled Monitor
+   - Long-term: run continuously across repositories.
+   - Open issues when new agent surfaces appear or risk score drops.
+
+## Work Plan
+
+### Now
+
+- Ship `--format inventory`.
+- Expand `AWG012` coverage to Copilot custom agents, prompts, and skills.
+- Document the widened project roadmap.
+
+### Next
+
+- Add policy mode for MCP server allowlists and approved agent context files.
+- Add a setup generator for the GitHub Action, config, baseline, and README badge.
+- Add JSON inventory output for downstream dashboards.
+
+### Later
+
+- Add trend reports for "new agent surface introduced" diffs.
+- Build the vulnerable lab and screenshot-friendly walkthroughs.
+- Explore a GitHub App after the CLI and Action adoption path is stable.
