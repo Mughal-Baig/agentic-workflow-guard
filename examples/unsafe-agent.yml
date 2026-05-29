@@ -1,0 +1,19 @@
+name: Unsafe AI triage
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions: write-all
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ask Claude to triage
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          claude --dangerously-skip-permissions \
+            --prompt "Triage this comment and update labels: ${{ github.event.comment.body }}"

@@ -1,0 +1,26 @@
+name: Agentic Workflow Guard
+description: Scan GitHub Actions workflows for AI-agent injection and unsafe permission patterns.
+author: agentic-workflow-guard
+inputs:
+  path:
+    description: Repository path or workflow file to scan.
+    required: false
+    default: .
+  format:
+    description: Output format: github, text, json, or markdown.
+    required: false
+    default: github
+  fail-on:
+    description: Minimum severity that fails the check: none, low, medium, high, or critical.
+    required: false
+    default: high
+  output:
+    description: Optional file path for json, markdown, or sarif output.
+    required: false
+    default: ''
+runs:
+  using: node20
+  main: bin/awguard.js
+branding:
+  icon: shield
+  color: blue

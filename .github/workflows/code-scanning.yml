@@ -1,0 +1,25 @@
+name: Code Scanning
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '22 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  agentic-workflow-guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate SARIF
+        run: node ./bin/awguard.js . --format sarif --output awguard.sarif --fail-on none
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: awguard.sarif
+          category: agentic-workflow-guard

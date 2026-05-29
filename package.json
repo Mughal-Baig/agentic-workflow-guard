@@ -1,0 +1,34 @@
+{
+  "name": "agentic-workflow-guard",
+  "version": "0.1.0",
+  "description": "Scan GitHub Actions workflows for AI-agent injection, unsafe permissions, and untrusted prompt flows.",
+  "type": "module",
+  "bin": {
+    "awguard": "./bin/awguard.js"
+  },
+  "scripts": {
+    "scan": "node ./bin/awguard.js . --fail-on high",
+    "test": "node --test"
+  },
+  "keywords": [
+    "github-actions",
+    "ai-agents",
+    "security",
+    "prompt-injection",
+    "devsecops",
+    "llm"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "action.yml",
+    "bin",
+    "src",
+    "docs",
+    "examples",
+    "README.md",
+    "LICENSE"
+  ]
+}
