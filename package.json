@@ -13,7 +13,7 @@
   },
   "author": "Mughal-Baig",
   "bin": {
-    "awguard": "./bin/awguard.js"
+    "awguard": "bin/awguard.js"
   },
   "scripts": {
     "scan": "node ./bin/awguard.js . --fail-on high",
