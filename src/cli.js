@@ -5,12 +5,12 @@ import { applyBaseline, createBaseline, loadBaseline, writeBaseline } from './ba
 import { loadConfig } from './config.js';
 import { renderFixDryRun } from './remediation.js';
 import { scanWorkflows, severityRank } from './scanner.js';
-import { renderGithubAnnotations, renderGraph, renderHtml, renderJson, renderMarkdown, renderSarif, renderText } from './reporters.js';
+import { renderGithubAnnotations, renderGraph, renderHtml, renderJson, renderMarkdown, renderMigration, renderSarif, renderText } from './reporters.js';
 
 const HELP = `Agentic Workflow Guard
 
 Usage:
-  awguard [path] [--config file] [--preset name] [--format text|json|markdown|github|sarif|graph|html] [--output file] [--baseline file] [--write-baseline file] [--fix-dry-run] [--fail-on none|low|medium|high|critical]
+  awguard [path] [--config file] [--preset name] [--format text|json|markdown|github|sarif|graph|html|migration] [--output file] [--baseline file] [--write-baseline file] [--fix-dry-run] [--fail-on none|low|medium|high|critical]
 
 Examples:
   awguard .
@@ -18,6 +18,7 @@ Examples:
   awguard . --preset strict --format graph
   awguard .github/workflows/agent.yml --format markdown --fail-on high
   awguard . --format html --output awguard-report.html
+  awguard . --format migration --output awguard-migration.md
   awguard . --fix-dry-run
   awguard . --format sarif --output awguard.sarif --fail-on none
   awguard . --write-baseline awguard.baseline.json
@@ -117,7 +118,7 @@ export function parseArgs(args, env = {}) {
     }
   }
 
-  validateEnum('format', options.format, ['text', 'json', 'markdown', 'github', 'sarif', 'graph', 'html']);
+  validateEnum('format', options.format, ['text', 'json', 'markdown', 'github', 'sarif', 'graph', 'html', 'migration']);
   validateEnum('fail-on', options.failOn, ['none', 'low', 'medium', 'high', 'critical']);
 
   return options;
@@ -134,6 +135,7 @@ function render(result, format) {
   if (format === 'sarif') return renderSarif(result);
   if (format === 'graph') return renderGraph(result);
   if (format === 'html') return renderHtml(result);
+  if (format === 'migration') return renderMigration(result);
   if (format === 'github') return renderGithubAnnotations(result);
   return renderText(result);
 }

@@ -11,5 +11,6 @@ Try:
 ```bash
 node ../bin/awguard.js unsafe-agent.yml --format graph
 node ../bin/awguard.js unsafe-agent.yml --format html --output awguard-report.html
+node ../bin/awguard.js unsafe-agent.yml --format migration
 node ../bin/awguard.js unsafe-agent.yml --fix-dry-run
 ```

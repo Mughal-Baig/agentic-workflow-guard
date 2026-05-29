@@ -109,6 +109,36 @@ The v1 release adds:
 - `--fix-dry-run` for safe remediation guidance.
 - Built-in presets for strict mode and common agent stacks.
 
+## Deep Research Refresh: Unique Angle After V1
+
+The stronger post-v1 position is not to become a broad AI security scanner. Popular neighboring projects already own the broad categories:
+
+- `zizmorcore/zizmor` and `rhysd/actionlint` own general GitHub Actions static analysis and linting.
+- `ossf/scorecard` owns open-source security health scoring.
+- `step-security/harden-runner` owns runner runtime hardening and egress visibility.
+- `affaan-m/agentshield`, `splx-ai/agentic-radar`, and `cisco-ai-defense/skill-scanner` own broader AI-agent, MCP, and skill-scanning surfaces.
+- `github/gh-aw` owns the emerging GitHub Agentic Workflows ecosystem.
+
+The gap Agentic Workflow Guard can still own is narrower and more memorable:
+
+```text
+find Agentic Workflow Injection -> explain the attack path -> migrate to safe outputs
+```
+
+This is why v1.1 adds `--format migration`. The output turns findings into a practical plan for moving unsafe agent jobs into a two-stage architecture:
+
+```text
+untrusted GitHub event text -> read-only agent job -> structured proposal -> validation -> safe outputs or approved apply job
+```
+
+This makes the project more distinctive because maintainers do not only get a red finding. They get a path from "my AI triage bot is risky" to "my bot can only perform allowed GitHub operations after validation."
+
+## Discovery Risk Found During Research
+
+The unscoped npm package name `agentic-workflow-guard` is already published by another maintainer and points to a different GitHub repository. Keeping that name in this repository would confuse users and could send `npx agentic-workflow-guard` traffic to the wrong code.
+
+The v1.1 package target is now `awguard`, matching the existing CLI binary and leaving the GitHub Action name unchanged.
+
 ## Distribution Plan
 
 1. Publish the repo with a short demo GIF or screenshot.

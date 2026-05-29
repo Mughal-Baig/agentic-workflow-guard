@@ -1,6 +1,6 @@
 {
-  "name": "agentic-workflow-guard",
-  "version": "1.0.0",
+  "name": "awguard",
+  "version": "1.1.0",
   "description": "Scan GitHub Actions workflows for AI-agent injection, unsafe permissions, and untrusted prompt flows.",
   "type": "module",
   "bin": {
@@ -16,7 +16,9 @@
     "security",
     "prompt-injection",
     "devsecops",
-    "llm"
+    "llm",
+    "agentic-workflow-injection",
+    "safe-outputs"
   ],
   "license": "MIT",
   "engines": {

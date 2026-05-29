@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0
+
+- Rename the npm package target to `awguard` to avoid the already-taken `agentic-workflow-guard` npm name.
+- Add `--format migration` for safe-output migration plans.
+- Add migration guidance that converts unsafe agent jobs into read-only proposal jobs plus validated safe outputs or approved apply jobs.
+- Document the migration report in the README and GitHub Action metadata.
+
 ## 1.0.0
 
 - Add `graph` output with Mermaid attack-chain diagrams.

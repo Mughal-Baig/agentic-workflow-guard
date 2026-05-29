@@ -25,14 +25,23 @@ Short pitch:
    ```
 
 5. Show the safe remediation steps.
+6. Run:
+
+   ```bash
+   node ./bin/awguard.js examples/unsafe-agent.yml --format migration
+   ```
+
+7. Show the migration from unsafe agent job to read-only proposal job plus safe outputs or an approved apply job.
 
 ## Release Checklist
 
 - Publish GitHub release notes for `v1.0.0`.
 - Add the action to GitHub Marketplace from the release UI.
+- Publish the npm package as `awguard`; do not use `agentic-workflow-guard` because that npm name is already controlled by another maintainer.
 - Pin the README demo to the attack graph, not the rule table.
-- Post with the headline: "I built a scanner for Agentic Workflow Injection in GitHub Actions."
+- Post with the headline: "I built a scanner that maps and migrates Agentic Workflow Injection in GitHub Actions."
 - Include the AWI attack chain screenshot in social posts.
+- Include the migration report screenshot after the graph screenshot.
 
 ## Distribution Targets
 

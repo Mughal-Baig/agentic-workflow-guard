@@ -34,10 +34,10 @@ npm test
 node ./bin/awguard.js .
 ```
 
-After publishing to npm:
+After publishing this repository to npm as the available `awguard` package:
 
 ```bash
-npx agentic-workflow-guard .
+npx awguard .
 ```
 
 ## Use In GitHub Actions
@@ -111,7 +111,7 @@ jobs:
 ## CLI
 
 ```bash
-awguard [path] [--config file] [--preset name] [--format text|json|markdown|github|sarif|graph|html] [--output file] [--baseline file] [--write-baseline file] [--fix-dry-run] [--fail-on none|low|medium|high|critical]
+awguard [path] [--config file] [--preset name] [--format text|json|markdown|github|sarif|graph|html|migration] [--output file] [--baseline file] [--write-baseline file] [--fix-dry-run] [--fail-on none|low|medium|high|critical]
 ```
 
 Examples:
@@ -121,6 +121,7 @@ node ./bin/awguard.js examples/unsafe-agent.yml
 node ./bin/awguard.js . --config awguard.config.json
 node ./bin/awguard.js . --preset strict --format graph
 node ./bin/awguard.js . --format html --output awguard-report.html
+node ./bin/awguard.js . --format migration --output awguard-migration.md
 node ./bin/awguard.js . --fix-dry-run
 node ./bin/awguard.js . --format markdown --fail-on medium
 node ./bin/awguard.js . --format sarif --output awguard.sarif --fail-on none
@@ -196,6 +197,24 @@ node ./bin/awguard.js examples/unsafe-agent.yml --format html --output awguard-r
 
 The report maps source, prompt boundary, capability, authority, and impact for each finding.
 
+## Safe-Output Migration Plans
+
+Generate a migration checklist for converting unsafe agent workflows into read-only agent jobs plus validated safe outputs or approved apply jobs:
+
+```bash
+node ./bin/awguard.js examples/unsafe-agent.yml --format migration --output awguard-migration.md
+```
+
+The migration report groups findings by workflow file, explains the risk shape, suggests allowed GitHub operations, and gives a reference two-stage pattern:
+
+```text
+untrusted GitHub event text
+  -> read-only agent job
+  -> structured proposal artifact
+  -> schema and policy validation
+  -> safe outputs or approved apply job
+```
+
 ## Fix Dry Run
 
 Print remediation guidance without editing files:
@@ -245,6 +264,7 @@ If you omit rule ids, the suppression applies to all findings on the target line
 ## Roadmap
 
 - Safe autofix for low-risk permission changes.
+- Safe-output migration patch previews for common triage and review bots.
 - GitHub App integration for always-on repository monitoring.
 - Rule packs for Claude Code, Codex, Gemini, Copilot, Aider, and custom agents.
 - Public vulnerable workflow lab with attack and fix walkthroughs.

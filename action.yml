@@ -7,7 +7,7 @@ inputs:
     required: false
     default: .
   format:
-    description: Output format: github, text, json, markdown, sarif, graph, or html.
+    description: Output format: github, text, json, markdown, sarif, graph, html, or migration.
     required: false
     default: github
   fail-on:
@@ -15,7 +15,7 @@ inputs:
     required: false
     default: high
   output:
-    description: Optional file path for json, markdown, or sarif output.
+    description: Optional file path for json, markdown, sarif, graph, html, or migration output.
     required: false
     default: ''
   baseline:
