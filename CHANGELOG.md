@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0
+
+- Add inline suppression comments with required justifications.
+- Add `AWG011` for invalid suppressions.
+- Support same-line and next-line suppressions for specific rule ids.
+- Document audited suppression usage.
+
 ## 0.2.0
 
 - Add baseline files with `--write-baseline`.

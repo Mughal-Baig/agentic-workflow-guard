@@ -66,6 +66,85 @@ jobs:
   assert.deepEqual(scanWorkflowText(workflow), []);
 });
 
+test('suppresses specific findings with a justified next-line comment', () => {
+  const workflow = `
+on: [issue_comment]
+permissions:
+  contents: read
+jobs:
+  triage:
+    steps:
+      # awguard-disable-next-line AWG001,AWG002 -- Maintainers manually reviewed this false positive.
+      - run: openai --prompt "\${{ github.event.comment.body }}"
+`;
+
+  assert.deepEqual(scanWorkflowText(workflow), []);
+});
+
+test('suppresses all findings on a target line when no rule ids are provided', () => {
+  const workflow = `
+on: [issue_comment]
+permissions:
+  contents: read
+jobs:
+  triage:
+    steps:
+      # awguard-disable-next-line -- Reviewed false positive in a maintainer-only workflow.
+      - run: openai --prompt "\${{ github.event.comment.body }}"
+`;
+
+  assert.deepEqual(scanWorkflowText(workflow), []);
+});
+
+test('suppresses same-line findings with a justified comment', () => {
+  const workflow = `
+on: [workflow_dispatch]
+permissions: write-all # awguard-disable-line AWG004 -- Release workflow intentionally writes tags after manual approval.
+jobs:
+  release:
+    steps:
+      - run: codex --approval-mode suggest --prompt-file prompt.txt
+`;
+
+  assert.deepEqual(scanWorkflowText(workflow), []);
+});
+
+test('reports suppression comments that do not include a justification', () => {
+  const workflow = `
+on: [issue_comment]
+permissions:
+  contents: read
+jobs:
+  triage:
+    steps:
+      # awguard-disable-next-line AWG001
+      - run: openai --prompt "\${{ github.event.comment.body }}"
+`;
+
+  const rules = scanWorkflowText(workflow).map((finding) => finding.ruleId);
+
+  assert.ok(rules.includes('AWG011'));
+  assert.ok(rules.includes('AWG001'));
+});
+
+test('reports suppression comments that reference an unknown rule id', () => {
+  const workflow = `
+on: [issue_comment]
+permissions:
+  contents: read
+jobs:
+  triage:
+    steps:
+      # awguard-disable-next-line AWG999 -- Reviewed false positive in a maintainer-only workflow.
+      - run: openai --prompt "\${{ github.event.comment.body }}"
+`;
+
+  const rules = scanWorkflowText(workflow).map((finding) => finding.ruleId);
+
+  assert.ok(rules.includes('AWG011'));
+  assert.ok(rules.includes('AWG001'));
+});
+
 test('discovers workflow files under .github/workflows', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'awguard-'));
   const workflowDir = path.join(root, '.github', 'workflows');

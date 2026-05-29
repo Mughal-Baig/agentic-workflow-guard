@@ -65,6 +65,19 @@ Agentic Workflow Guard now supports:
 
 This improves public reach because a maintainer can add the tool to a real repository with risk already present, keep visibility into the existing risk, and still block new high-severity agent-workflow mistakes.
 
+## Fourth-Pass Improvement: Auditable Suppressions
+
+Baseline mode helps teams start. Inline suppressions help them stay. Mature scanners support local suppressions because false positives and intentionally accepted risks happen, but the useful pattern is to require a reason so the exception is reviewable later.
+
+Agentic Workflow Guard now supports:
+
+- `# awguard-disable-next-line AWG001 -- reason` for the next reported line.
+- `# awguard-disable-line AWG004 -- reason` for same-line findings.
+- Multiple rule ids separated by spaces or commas.
+- `AWG011` findings when suppression comments omit a clear justification or reference unknown rules.
+
+This makes the project safer to adopt publicly because it gives maintainers a practical false-positive escape hatch without normalizing silent ignores.
+
 ## Distribution Plan
 
 1. Publish the repo with a short demo GIF or screenshot.
@@ -82,5 +95,7 @@ This improves public reach because a maintainer can add the tool to a real repos
 - GitHub Actions secure use reference: https://docs.github.com/en/enterprise-cloud@latest/actions/reference/security/secure-use
 - GitHub Agentic Workflows security architecture: https://github.github.com/gh-aw/
 - OpenSSF Scorecard dangerous workflow check: https://github.com/ossf/scorecard/blob/main/docs/checks.md#dangerous-workflow
+- Semgrep inline ignore docs: https://semgrep.dev/docs/ignoring-files-folders-code
+- ESLint configuration comment descriptions: https://eslint.org/docs/latest/use/configure/rules#configuration-comment-descriptions
 - OWASP Top 10 for Large Language Model Applications: https://owasp.org/www-project-top-10-for-large-language-model-applications/
 - Agentic Workflow Injection paper: https://arxiv.org/abs/2605.07135

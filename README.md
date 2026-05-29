@@ -126,6 +126,19 @@ node ./bin/awguard.js . --baseline awguard.baseline.json --fail-on high
 
 The baseline stores stable finding fingerprints, not secrets or workflow contents.
 
+## Inline Suppressions
+
+Suppressions are for reviewed false positives. They must include a reason after `--`.
+
+```yaml
+# awguard-disable-next-line AWG001,AWG002 -- Reviewed: this workflow only runs after maintainer approval.
+- run: openai --prompt "${{ github.event.comment.body }}"
+
+permissions: write-all # awguard-disable-line AWG004 -- Reviewed: release job needs tag write access.
+```
+
+If you omit rule ids, the suppression applies to all findings on the target line. Suppression comments without a clear reason are reported as `AWG011`.
+
 ## What It Detects
 
 | Rule | Severity | What it finds |
@@ -140,6 +153,7 @@ The baseline stores stable finding fingerprints, not secrets or workflow content
 | AWG008 | Medium | Agent workflow missing explicit `permissions` |
 | AWG009 | Medium | `workflow_run` consuming artifacts before scripts |
 | AWG010 | Low | Third-party actions in agent workflows not pinned to a SHA |
+| AWG011 | Medium | Invalid suppression comments |
 
 ## Example Finding
 
@@ -152,7 +166,7 @@ The baseline stores stable finding fingerprints, not secrets or workflow content
 
 ## Roadmap
 
-- Inline suppression comments with required justification text.
+- Project config for custom rule severity and allowed suppressions.
 - Autofix suggestions for `permissions` and safe env-variable patterns.
 - Rule packs for Claude Code, Codex, Gemini, Copilot, Aider, and custom agents.
 - Optional taint graph output for security reviews.

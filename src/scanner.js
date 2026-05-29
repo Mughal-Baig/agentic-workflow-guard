@@ -32,6 +32,8 @@ const commandSinkPattern =
 const modelOutputPattern =
   /\b(agent|ai|completion|llm|model|output|patch|plan|response|result)\b/i;
 
+const suppressionPattern = /#\s*awguard-disable-(next-line|line)\b(.*)$/i;
+
 const untrustedTriggers = new Set([
   'discussion_comment',
   'issue_comment',
@@ -103,6 +105,12 @@ export const ruleCatalog = {
     severity: 'low',
     suggestion:
       'Pin third-party actions to a full commit SHA in security-sensitive agent workflows, and review the action before updating the pin.'
+  },
+  AWG011: {
+    title: 'Invalid suppression comment',
+    severity: 'medium',
+    suggestion:
+      'Use awguard-disable-next-line or awguard-disable-line with rule ids and a clear reason after --, for example: # awguard-disable-next-line AWG001 -- reviewed false positive.'
   }
 };
 
@@ -137,6 +145,7 @@ export function scanWorkflowText(text, file = 'workflow.yml', root = process.cwd
   const hasPermissionBlock = /^\s*permissions\s*:/im.test(text);
   const hasBroadPermission = lines.some((line) => isBroadPermissionLine(line));
   const hasSecret = lines.some((line) => /\bsecrets\.[A-Z0-9_]+\b/i.test(line));
+  const { suppressions, invalidSuppressions } = collectSuppressions(lines);
 
   const context = {
     file,
@@ -150,10 +159,14 @@ export function scanWorkflowText(text, file = 'workflow.yml', root = process.cwd
     hasPermissionBlock,
     hasBroadPermission,
     hasSecret,
+    suppressions,
+    invalidSuppressions,
+    suppressedFindings: [],
     findings: [],
     seen: new Set()
   };
 
+  detectInvalidSuppressions(context);
   detectPromptToAgent(context);
   detectScriptInjection(context);
   detectPullRequestTargetCheckout(context);
@@ -348,6 +361,15 @@ function detectUnpinnedActions(context) {
   });
 }
 
+function detectInvalidSuppressions(context) {
+  context.invalidSuppressions.forEach((suppression) => {
+    addFinding(context, 'AWG011', suppression.line, {
+      evidence: suppression.evidence,
+      message: suppression.message
+    });
+  });
+}
+
 function addFinding(context, ruleId, line, overrides = {}) {
   const docs = ruleCatalog[ruleId];
   const key = `${ruleId}:${line}:${overrides.evidence || ''}`;
@@ -366,11 +388,86 @@ function addFinding(context, ruleId, line, overrides = {}) {
     suggestion: overrides.suggestion || docs.suggestion
   };
 
+  const suppression = ruleId === 'AWG011' ? null : findSuppression(context, ruleId, line);
+  if (suppression) {
+    context.suppressedFindings.push({
+      ...finding,
+      suppressionReason: suppression.reason
+    });
+    return;
+  }
+
   context.findings.push({
     ...finding,
     fingerprint: findingFingerprint(finding),
     baselineState: 'new'
   });
+}
+
+function collectSuppressions(lines) {
+  const suppressions = new Map();
+  const invalidSuppressions = [];
+
+  lines.forEach((line, index) => {
+    const match = line.match(suppressionPattern);
+    if (!match) return;
+
+    const parsed = parseSuppression(match, line, index + 1);
+    if (!parsed.valid) {
+      invalidSuppressions.push(parsed);
+      return;
+    }
+
+    const existing = suppressions.get(parsed.targetLine) || [];
+    existing.push(parsed);
+    suppressions.set(parsed.targetLine, existing);
+  });
+
+  return { suppressions, invalidSuppressions };
+}
+
+function parseSuppression(match, line, lineNumber) {
+  const mode = match[1].toLowerCase();
+  const rest = match[2].trim();
+  const separatorIndex = rest.indexOf('--');
+  const ruleText = separatorIndex === -1 ? rest : rest.slice(0, separatorIndex).trim();
+  const reason = separatorIndex === -1 ? '' : rest.slice(separatorIndex + 2).trim();
+  const rules = ruleText ? ruleText.split(/[,\s]+/).filter(Boolean).map((rule) => rule.toUpperCase()) : ['*'];
+  const targetLine = mode === 'next-line' ? lineNumber + 1 : lineNumber;
+  const evidence = line.trim();
+
+  if (!reason || reason.length < 10) {
+    return {
+      valid: false,
+      line: lineNumber,
+      evidence,
+      message: 'Suppression comments must include a clear justification after --.'
+    };
+  }
+
+  const invalidRule = rules.find((rule) => rule !== '*' && !ruleCatalog[rule]);
+  if (invalidRule) {
+    return {
+      valid: false,
+      line: lineNumber,
+      evidence,
+      message: `Suppression references unknown rule id: ${invalidRule}.`
+    };
+  }
+
+  return {
+    valid: true,
+    line: lineNumber,
+    targetLine,
+    rules,
+    reason,
+    evidence
+  };
+}
+
+function findSuppression(context, ruleId, line) {
+  const candidates = context.suppressions.get(line) || [];
+  return candidates.find((suppression) => suppression.rules.includes('*') || suppression.rules.includes(ruleId));
 }
 
 function summarize(findings) {

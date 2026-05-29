@@ -1,0 +1,15 @@
+name: Suppressed AI triage
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      # awguard-disable-next-line AWG001,AWG002 -- Reviewed false positive: only maintainers can trigger this workflow.
+      - run: openai --prompt "${{ github.event.comment.body }}"
