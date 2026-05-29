@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.1
+
+- Add npm package metadata for the public `awguard` package.
+- Update README install wording now that the package is ready for npm publishing.
+
 ## 1.1.0
 
 - Rename the npm package target to `awguard` to avoid the already-taken `agentic-workflow-guard` npm name.

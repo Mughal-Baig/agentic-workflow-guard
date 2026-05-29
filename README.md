@@ -34,7 +34,7 @@ npm test
 node ./bin/awguard.js .
 ```
 
-After publishing this repository to npm as the available `awguard` package:
+Install from npm:
 
 ```bash
 npx awguard .
