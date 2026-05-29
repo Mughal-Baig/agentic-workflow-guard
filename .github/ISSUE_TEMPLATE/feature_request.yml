@@ -1,0 +1,24 @@
+name: Feature request
+description: Suggest a new rule, report format, integration, or workflow.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What agentic workflow, instruction, or MCP risk should AWGuard help with?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the rule, output, or integration you want.
+    validations:
+      required: true
+  - type: textarea
+    id: examples
+    attributes:
+      label: Examples
+      description: Link or paste safe and unsafe examples if you have them.

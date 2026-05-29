@@ -1,0 +1,39 @@
+name: Bug report
+description: Report incorrect behavior, crashes, false positives, or false negatives.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: input
+    attributes:
+      label: Minimal input
+      description: Paste the smallest workflow, instruction file, or MCP config that reproduces the issue.
+      render: yaml
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What finding or output did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What did AWGuard output?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Example: awguard 1.5.0, GitHub Action v0, or commit SHA.
+    validations:
+      required: true

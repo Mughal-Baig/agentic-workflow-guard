@@ -15,7 +15,7 @@ inputs:
     required: false
     default: high
   output:
-    description: Optional file path for json, markdown, sarif, graph, html, migration, score, or badge output.
+    description: Optional file path for json, markdown, sarif, graph, html, migration, score, badge, or inventory output.
     required: false
     default: ''
   baseline:

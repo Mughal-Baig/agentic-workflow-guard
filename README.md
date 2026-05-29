@@ -351,6 +351,10 @@ If you omit rule ids, the suppression applies to all findings on the target line
 - Rule packs for Claude Code, Codex, Gemini, Copilot, Aider, and custom agents.
 - Public vulnerable workflow lab with attack and fix walkthroughs.
 
+## Contributing And Security
+
+Contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md), and report sensitive security issues using [SECURITY.md](SECURITY.md).
+
 ## Research Backing
 
 See [docs/market-analysis.md](docs/market-analysis.md) for the demand analysis, gap, audience, and launch plan.
