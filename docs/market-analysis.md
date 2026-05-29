@@ -78,6 +78,20 @@ Agentic Workflow Guard now supports:
 
 This makes the project safer to adopt publicly because it gives maintainers a practical false-positive escape hatch without normalizing silent ignores.
 
+## Fifth-Pass Improvement: Project Configuration
+
+The next adoption layer is project configuration. ESLint and Semgrep both normalize the idea that teams should tune rule severity, disable specific rules, and define policy in a checked-in file. Agentic Workflow Guard now supports the same shape for this narrower security domain.
+
+Agentic Workflow Guard now supports:
+
+- `awguard.config.json` and `.awguard.json` auto-discovery from the scan root.
+- `--config path/to/config.json` for explicit config.
+- Rule severity overrides such as `"AWG004": "critical"`.
+- Disabled rules such as `"AWG010": "off"`.
+- Suppression policy such as allowed suppression rule ids and minimum reason length.
+
+This improves public reach because teams can adopt the scanner without forking it or arguing with one-size-fits-all severity choices.
+
 ## Distribution Plan
 
 1. Publish the repo with a short demo GIF or screenshot.

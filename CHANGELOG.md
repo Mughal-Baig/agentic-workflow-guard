@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.0
+
+- Add `awguard.config.json` and `.awguard.json` auto-discovery.
+- Add `--config` and GitHub Action `config` input.
+- Support rule severity overrides and disabled rules.
+- Support suppression policies with allowed rule ids and minimum reason length.
+
 ## 0.3.0
 
 - Add inline suppression comments with required justifications.

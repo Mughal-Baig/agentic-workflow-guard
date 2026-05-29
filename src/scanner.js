@@ -114,11 +114,11 @@ export const ruleCatalog = {
   }
 };
 
-export function scanWorkflows({ root = process.cwd() } = {}) {
+export function scanWorkflows({ root = process.cwd(), config = {} } = {}) {
   const absoluteRoot = path.resolve(root);
   const relativeBase = fs.statSync(absoluteRoot).isFile() ? path.dirname(absoluteRoot) : absoluteRoot;
   const files = discoverWorkflowFiles(absoluteRoot);
-  const findings = files.flatMap((file) => scanWorkflowFile(file, relativeBase));
+  const findings = files.flatMap((file) => scanWorkflowFile(file, relativeBase, config));
 
   findings.sort((a, b) => {
     const severityDelta = severityWeight.get(b.severity) - severityWeight.get(a.severity);
@@ -135,7 +135,7 @@ export function scanWorkflows({ root = process.cwd() } = {}) {
   };
 }
 
-export function scanWorkflowText(text, file = 'workflow.yml', root = process.cwd()) {
+export function scanWorkflowText(text, file = 'workflow.yml', root = process.cwd(), config = {}) {
   const lines = text.split(/\r?\n/);
   const runBlocks = markRunBlocks(lines);
   const triggers = detectTriggers(text, lines);
@@ -145,7 +145,7 @@ export function scanWorkflowText(text, file = 'workflow.yml', root = process.cwd
   const hasPermissionBlock = /^\s*permissions\s*:/im.test(text);
   const hasBroadPermission = lines.some((line) => isBroadPermissionLine(line));
   const hasSecret = lines.some((line) => /\bsecrets\.[A-Z0-9_]+\b/i.test(line));
-  const { suppressions, invalidSuppressions } = collectSuppressions(lines);
+  const { suppressions, invalidSuppressions } = collectSuppressions(lines, config.suppressions || {});
 
   const context = {
     file,
@@ -159,6 +159,7 @@ export function scanWorkflowText(text, file = 'workflow.yml', root = process.cwd
     hasPermissionBlock,
     hasBroadPermission,
     hasSecret,
+    config,
     suppressions,
     invalidSuppressions,
     suppressedFindings: [],
@@ -181,9 +182,9 @@ export function scanWorkflowText(text, file = 'workflow.yml', root = process.cwd
   return context.findings;
 }
 
-function scanWorkflowFile(file, root) {
+function scanWorkflowFile(file, root, config) {
   const text = fs.readFileSync(file, 'utf8');
-  return scanWorkflowText(text, file, root);
+  return scanWorkflowText(text, file, root, config);
 }
 
 function discoverWorkflowFiles(root) {
@@ -372,6 +373,9 @@ function detectInvalidSuppressions(context) {
 
 function addFinding(context, ruleId, line, overrides = {}) {
   const docs = ruleCatalog[ruleId];
+  const ruleConfig = context.config.rules?.[ruleId];
+  if (ruleConfig?.enabled === false) return;
+
   const key = `${ruleId}:${line}:${overrides.evidence || ''}`;
   if (context.seen.has(key)) return;
   context.seen.add(key);
@@ -379,7 +383,7 @@ function addFinding(context, ruleId, line, overrides = {}) {
   const finding = {
     ruleId,
     title: docs.title,
-    severity: overrides.severity || docs.severity,
+    severity: ruleConfig?.severity || overrides.severity || docs.severity,
     file: context.relativeFile,
     absoluteFile: context.file,
     line,
@@ -404,7 +408,12 @@ function addFinding(context, ruleId, line, overrides = {}) {
   });
 }
 
-function collectSuppressions(lines) {
+function collectSuppressions(lines, rawSuppressionConfig = {}) {
+  const suppressionConfig = {
+    allow: rawSuppressionConfig.allow !== false,
+    allowedRules: rawSuppressionConfig.allowedRules || [],
+    minimumReasonLength: rawSuppressionConfig.minimumReasonLength || 10
+  };
   const suppressions = new Map();
   const invalidSuppressions = [];
 
@@ -412,7 +421,7 @@ function collectSuppressions(lines) {
     const match = line.match(suppressionPattern);
     if (!match) return;
 
-    const parsed = parseSuppression(match, line, index + 1);
+    const parsed = parseSuppression(match, line, index + 1, suppressionConfig);
     if (!parsed.valid) {
       invalidSuppressions.push(parsed);
       return;
@@ -426,7 +435,7 @@ function collectSuppressions(lines) {
   return { suppressions, invalidSuppressions };
 }
 
-function parseSuppression(match, line, lineNumber) {
+function parseSuppression(match, line, lineNumber, suppressionConfig) {
   const mode = match[1].toLowerCase();
   const rest = match[2].trim();
   const separatorIndex = rest.indexOf('--');
@@ -436,7 +445,16 @@ function parseSuppression(match, line, lineNumber) {
   const targetLine = mode === 'next-line' ? lineNumber + 1 : lineNumber;
   const evidence = line.trim();
 
-  if (!reason || reason.length < 10) {
+  if (suppressionConfig.allow === false) {
+    return {
+      valid: false,
+      line: lineNumber,
+      evidence,
+      message: 'Suppression comments are disabled by configuration.'
+    };
+  }
+
+  if (!reason || reason.length < suppressionConfig.minimumReasonLength) {
     return {
       valid: false,
       line: lineNumber,
@@ -453,6 +471,27 @@ function parseSuppression(match, line, lineNumber) {
       evidence,
       message: `Suppression references unknown rule id: ${invalidRule}.`
     };
+  }
+
+  if (suppressionConfig.allowedRules?.length > 0) {
+    if (rules.includes('*')) {
+      return {
+        valid: false,
+        line: lineNumber,
+        evidence,
+        message: 'Wildcard suppression is not allowed by configuration.'
+      };
+    }
+
+    const disallowedRule = rules.find((rule) => !suppressionConfig.allowedRules.includes(rule));
+    if (disallowedRule) {
+      return {
+        valid: false,
+        line: lineNumber,
+        evidence,
+        message: `Suppression for ${disallowedRule} is not allowed by configuration.`
+      };
+    }
   }
 
   return {

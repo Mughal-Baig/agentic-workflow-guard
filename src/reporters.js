@@ -80,7 +80,7 @@ export function renderSarif(result) {
             driver: {
               name: 'Agentic Workflow Guard',
               informationUri: 'https://github.com/Mughal-Baig/agentic-workflow-guard',
-              semanticVersion: '0.3.0',
+              semanticVersion: '0.4.0',
               rules: Object.entries(ruleCatalog).map(([id, rule]) => ({
                 id,
                 name: id,

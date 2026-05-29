@@ -46,6 +46,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: Mughal-Baig/agentic-workflow-guard@v0
         with:
+          config: awguard.config.json
           fail-on: high
 ```
 
@@ -94,13 +95,14 @@ jobs:
 ## CLI
 
 ```bash
-awguard [path] [--format text|json|markdown|github|sarif] [--output file] [--baseline file] [--write-baseline file] [--fail-on none|low|medium|high|critical]
+awguard [path] [--config file] [--format text|json|markdown|github|sarif] [--output file] [--baseline file] [--write-baseline file] [--fail-on none|low|medium|high|critical]
 ```
 
 Examples:
 
 ```bash
 node ./bin/awguard.js examples/unsafe-agent.yml
+node ./bin/awguard.js . --config awguard.config.json
 node ./bin/awguard.js . --format markdown --fail-on medium
 node ./bin/awguard.js . --format sarif --output awguard.sarif --fail-on none
 node ./bin/awguard.js . --write-baseline awguard.baseline.json
@@ -125,6 +127,29 @@ node ./bin/awguard.js . --baseline awguard.baseline.json --fail-on high
 ```
 
 The baseline stores stable finding fingerprints, not secrets or workflow contents.
+
+## Configuration
+
+Agentic Workflow Guard automatically loads `awguard.config.json` or `.awguard.json` from the scan root. You can also pass `--config`.
+
+```json
+{
+  "rules": {
+    "AWG010": "off",
+    "AWG008": "low",
+    "AWG004": {
+      "severity": "critical"
+    }
+  },
+  "suppressions": {
+    "allowedRules": ["AWG001", "AWG002"],
+    "minimumReasonLength": 20
+  }
+}
+```
+
+Rule values can be `"off"`, `"low"`, `"medium"`, `"high"`, or `"critical"`.
+See `examples/awguard.config.example.json` for a complete template.
 
 ## Inline Suppressions
 
@@ -166,7 +191,7 @@ If you omit rule ids, the suppression applies to all findings on the target line
 
 ## Roadmap
 
-- Project config for custom rule severity and allowed suppressions.
+- Shareable rule presets for common agent stacks.
 - Autofix suggestions for `permissions` and safe env-variable patterns.
 - Rule packs for Claude Code, Codex, Gemini, Copilot, Aider, and custom agents.
 - Optional taint graph output for security reviews.

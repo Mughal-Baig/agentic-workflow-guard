@@ -7,7 +7,7 @@ inputs:
     required: false
     default: .
   format:
-    description: Output format: github, text, json, or markdown.
+    description: Output format: github, text, json, markdown, or sarif.
     required: false
     default: github
   fail-on:
@@ -24,6 +24,10 @@ inputs:
     default: ''
   write-baseline:
     description: Optional path to write a baseline file for the current scan.
+    required: false
+    default: ''
+  config:
+    description: Optional path to an Agentic Workflow Guard JSON config file.
     required: false
     default: ''
 runs:

@@ -1,0 +1,13 @@
+{
+  "rules": {
+    "AWG010": "off",
+    "AWG008": "low",
+    "AWG004": {
+      "severity": "critical"
+    }
+  },
+  "suppressions": {
+    "allowedRules": ["AWG001", "AWG002"],
+    "minimumReasonLength": 20
+  }
+}

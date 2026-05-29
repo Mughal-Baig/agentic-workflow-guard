@@ -2,16 +2,18 @@ import process from 'node:process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { applyBaseline, createBaseline, loadBaseline, writeBaseline } from './baseline.js';
+import { loadConfig } from './config.js';
 import { scanWorkflows, severityRank } from './scanner.js';
 import { renderGithubAnnotations, renderJson, renderMarkdown, renderSarif, renderText } from './reporters.js';
 
 const HELP = `Agentic Workflow Guard
 
 Usage:
-  awguard [path] [--format text|json|markdown|github|sarif] [--output file] [--baseline file] [--write-baseline file] [--fail-on none|low|medium|high|critical]
+  awguard [path] [--config file] [--format text|json|markdown|github|sarif] [--output file] [--baseline file] [--write-baseline file] [--fail-on none|low|medium|high|critical]
 
 Examples:
   awguard .
+  awguard . --config awguard.config.json
   awguard .github/workflows/agent.yml --format markdown --fail-on high
   awguard . --format sarif --output awguard.sarif --fail-on none
   awguard . --write-baseline awguard.baseline.json
@@ -27,7 +29,8 @@ export async function runCli(args, env = process.env) {
     return;
   }
 
-  let result = scanWorkflows({ root: options.path });
+  const { config } = loadConfig({ configPath: options.config, root: options.path });
+  let result = scanWorkflows({ root: options.path, config });
 
   if (options.baseline) {
     result = applyBaseline(result, loadBaseline(options.baseline));
@@ -62,6 +65,7 @@ export function parseArgs(args, env = {}) {
     output: readInput(env, 'output') || '',
     baseline: readInput(env, 'baseline') || '',
     writeBaseline: readInput(env, 'write_baseline') || readInput(env, 'write-baseline') || '',
+    config: readInput(env, 'config') || '',
     help: false
   };
 
@@ -90,6 +94,10 @@ export function parseArgs(args, env = {}) {
       options.writeBaseline = args[++index];
     } else if (arg.startsWith('--write-baseline=')) {
       options.writeBaseline = arg.slice('--write-baseline='.length);
+    } else if (arg === '--config') {
+      options.config = args[++index];
+    } else if (arg.startsWith('--config=')) {
+      options.config = arg.slice('--config='.length);
     } else if (!arg.startsWith('-')) {
       options.path = arg;
     } else {
