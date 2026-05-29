@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.3.0
+
+- Add `AWG012` for risky persistent agent instruction files.
+- Scan `AGENTS.md`, `CLAUDE.md`, `CODEX.md`, `GEMINI.md`, Copilot instructions, Cursor rules, and related instruction files.
+- Flag instructions that bypass approvals, treat untrusted GitHub text as commands, or expose secrets.
+
 ## 1.2.0
 
 - Add `--format score` for an Agentic Workflow Injection scorecard.

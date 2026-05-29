@@ -7,9 +7,9 @@
 [![AWI risk](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Mughal-Baig/agentic-workflow-guard/main/docs/awguard-badge.json)](docs/awguard-badge.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-`agentic-workflow-guard` is a small, zero-dependency scanner for GitHub Actions workflows that use AI coding agents, LLMs, or automated review bots.
+`agentic-workflow-guard` is a small, zero-dependency scanner for GitHub Actions workflows and persistent agent instruction files used by AI coding agents, LLMs, or automated review bots.
 
-It looks for a new class of CI/CD risk: untrusted issue, pull request, comment, or branch text flowing into an AI agent prompt, then into write-capable tools, secrets, or shell scripts.
+It looks for a new class of CI/CD risk: untrusted issue, pull request, comment, or branch text flowing into an AI agent prompt, then into write-capable tools, secrets, shell scripts, or persistent instructions that weaken review boundaries.
 
 Its unique output is an **Agentic Workflow Injection attack graph**:
 
@@ -241,6 +241,21 @@ Then add a badge to your README:
 
 The score starts at 100 and subtracts risk for critical, high, medium, and low findings. This makes AWGuard easy to show in a README without hiding the detailed SARIF, graph, and migration reports.
 
+## Agent Context Guard
+
+AWGuard also scans persistent agent instruction files:
+
+- `AGENTS.md`
+- `CLAUDE.md`
+- `CODEX.md`
+- `GEMINI.md`
+- `.github/copilot-instructions.md`
+- `.github/instructions/*.instructions.md`
+- `.cursor/rules/*.{md,mdc,txt}`
+- `.cursorrules`, `.windsurfrules`, and `.clinerules`
+
+It flags instruction files that tell agents to bypass approvals, skip permission prompts, obey issue or PR text as commands, or expose secrets.
+
 ## Fix Dry Run
 
 Print remediation guidance without editing files:
@@ -277,6 +292,7 @@ If you omit rule ids, the suppression applies to all findings on the target line
 | AWG009 | Medium | `workflow_run` consuming artifacts before scripts |
 | AWG010 | Low | Third-party actions in agent workflows not pinned to a SHA |
 | AWG011 | Medium | Invalid suppression comments |
+| AWG012 | High/Critical | Agent instruction files that weaken approval, permission, or secret boundaries |
 
 ## Example Finding
 
@@ -292,6 +308,7 @@ If you omit rule ids, the suppression applies to all findings on the target line
 - Safe autofix for low-risk permission changes.
 - Safe-output migration patch previews for common triage and review bots.
 - Hosted AWI score API for dynamic cross-repository badges.
+- Agent instruction file rule packs for Copilot, Claude Code, Codex, Gemini, Cursor, and Windsurf.
 - GitHub App integration for always-on repository monitoring.
 - Rule packs for Claude Code, Codex, Gemini, Copilot, Aider, and custom agents.
 - Public vulnerable workflow lab with attack and fix walkthroughs.

@@ -14,6 +14,17 @@ const severityWeight = new Map(Object.entries(severityRank));
 
 const workflowExtensions = new Set(['.yml', '.yaml']);
 
+const agentInstructionFiles = new Set([
+  'AGENTS.md',
+  'CLAUDE.md',
+  'CODEX.md',
+  'GEMINI.md',
+  '.cursorrules',
+  '.windsurfrules',
+  '.clinerules',
+  '.github/copilot-instructions.md'
+]);
+
 const untrustedFieldPattern =
   /\${{\s*github\.(?:event\.[\w.-]+\.)?(?:body|default_branch|email|head_ref|label|message|name|page_name|ref|title)\s*}}|github\.(?:event\.[\w.-]+\.)?(?:body|default_branch|email|head_ref|label|message|name|page_name|ref|title)/i;
 
@@ -33,6 +44,15 @@ const modelOutputPattern =
   /\b(agent|ai|completion|llm|model|output|patch|plan|response|result)\b/i;
 
 const suppressionPattern = /#\s*awguard-disable-(next-line|line)\b(.*)$/i;
+
+const riskyAgentInstructionPattern =
+  /--dangerously-skip-permissions|--yolo|--allow-all|--unsafe|--auto-approve|--no-confirm|approval-mode\s+full-auto|bypass\s+(?:all\s+)?permissions|skip\s+(?:all\s+)?permission prompts|never ask (?:for )?(?:approval|confirmation|permission)|do not ask (?:for )?(?:approval|confirmation|permission)|act without (?:approval|confirmation|permission)/i;
+
+const untrustedCommandInstructionPattern =
+  /\b(?:follow|obey|execute|run|apply)\b.{0,80}\b(?:issue|pull request|pr|comment|review|branch)\b.{0,80}\b(?:instruction|instructions|request|requests|command|commands|body|title|text)\b/i;
+
+const secretExposureInstructionPattern =
+  /\b(?:print|echo|log|include|send|expose|return|paste)\b.{0,80}\b(?:secret|secrets|token|tokens|api key|api keys|apikey|apikeys|credential|credentials|password|passwords)\b/i;
 
 const untrustedTriggers = new Set([
   'discussion_comment',
@@ -111,14 +131,20 @@ export const ruleCatalog = {
     severity: 'medium',
     suggestion:
       'Use awguard-disable-next-line or awguard-disable-line with rule ids and a clear reason after --, for example: # awguard-disable-next-line AWG001 -- reviewed false positive.'
+  },
+  AWG012: {
+    title: 'Agent instruction file weakens review or permission boundaries',
+    severity: 'high',
+    suggestion:
+      'Keep AGENTS.md, CLAUDE.md, GEMINI.md, Copilot instructions, and other persistent agent instruction files conservative. Do not tell agents to bypass approvals, follow untrusted issue/PR text as commands, or expose secrets.'
   }
 };
 
 export function scanWorkflows({ root = process.cwd(), config = {} } = {}) {
   const absoluteRoot = path.resolve(root);
   const relativeBase = fs.statSync(absoluteRoot).isFile() ? path.dirname(absoluteRoot) : absoluteRoot;
-  const files = discoverWorkflowFiles(absoluteRoot);
-  const findings = files.flatMap((file) => scanWorkflowFile(file, relativeBase, config));
+  const files = discoverScanFiles(absoluteRoot);
+  const findings = files.flatMap((file) => scanFile(file, relativeBase, config));
 
   findings.sort((a, b) => {
     const severityDelta = severityWeight.get(b.severity) - severityWeight.get(a.severity);
@@ -182,27 +208,60 @@ export function scanWorkflowText(text, file = 'workflow.yml', root = process.cwd
   return context.findings;
 }
 
-function scanWorkflowFile(file, root, config) {
+export function scanAgentInstructionText(text, file = 'AGENTS.md', root = process.cwd(), config = {}) {
+  const lines = text.split(/\r?\n/);
+  const { suppressions, invalidSuppressions } = collectSuppressions(lines, config.suppressions || {});
+  const context = {
+    file,
+    relativeFile: path.isAbsolute(file) ? path.relative(root, file) || path.basename(file) : file,
+    lines,
+    runBlocks: new Set(),
+    triggers: new Set(),
+    hasAgent: true,
+    hasPromptBoundary: true,
+    hasUntrustedTrigger: false,
+    hasPermissionBlock: false,
+    hasBroadPermission: false,
+    hasSecret: false,
+    config,
+    suppressions,
+    invalidSuppressions,
+    suppressedFindings: [],
+    findings: [],
+    seen: new Set()
+  };
+
+  detectInvalidSuppressions(context);
+  detectRiskyAgentInstructions(context);
+  return context.findings;
+}
+
+function scanFile(file, root, config) {
   const text = fs.readFileSync(file, 'utf8');
+  if (isAgentInstructionFile(file, root)) {
+    return scanAgentInstructionText(text, file, root, config);
+  }
   return scanWorkflowText(text, file, root, config);
 }
 
-function discoverWorkflowFiles(root) {
+function discoverScanFiles(root) {
   if (!fs.existsSync(root)) {
     throw new Error(`path does not exist: ${root}`);
   }
 
   const stat = fs.statSync(root);
   if (stat.isFile()) {
-    return workflowExtensions.has(path.extname(root)) ? [root] : [];
+    return workflowExtensions.has(path.extname(root)) || isAgentInstructionFile(root, path.dirname(root)) ? [root] : [];
   }
 
+  const files = [];
   const workflowDir = path.join(root, '.github', 'workflows');
-  if (!fs.existsSync(workflowDir)) {
-    return [];
+  if (fs.existsSync(workflowDir)) {
+    files.push(...walk(workflowDir).filter((file) => workflowExtensions.has(path.extname(file))));
   }
 
-  return walk(workflowDir).filter((file) => workflowExtensions.has(path.extname(file)));
+  files.push(...discoverAgentInstructionFiles(root));
+  return [...new Set(files)].sort();
 }
 
 function walk(dir) {
@@ -368,6 +427,36 @@ function detectInvalidSuppressions(context) {
       evidence: suppression.evidence,
       message: suppression.message
     });
+  });
+}
+
+function detectRiskyAgentInstructions(context) {
+  context.lines.forEach((line, index) => {
+    if (isDefensiveInstructionLine(line)) return;
+
+    if (riskyAgentInstructionPattern.test(line)) {
+      addFinding(context, 'AWG012', index + 1, {
+        evidence: line.trim(),
+        message: 'A persistent agent instruction appears to weaken approval or permission boundaries.'
+      });
+      return;
+    }
+
+    if (untrustedCommandInstructionPattern.test(line)) {
+      addFinding(context, 'AWG012', index + 1, {
+        evidence: line.trim(),
+        message: 'A persistent agent instruction appears to tell agents to treat untrusted GitHub text as commands.'
+      });
+      return;
+    }
+
+    if (secretExposureInstructionPattern.test(line)) {
+      addFinding(context, 'AWG012', index + 1, {
+        severity: 'critical',
+        evidence: line.trim(),
+        message: 'A persistent agent instruction appears to allow secrets or credentials to be exposed.'
+      });
+    }
   });
 }
 
@@ -584,6 +673,47 @@ function isBroadPermissionLine(line) {
       line
     )
   );
+}
+
+function discoverAgentInstructionFiles(root) {
+  const files = [];
+
+  for (const relativeFile of agentInstructionFiles) {
+    const file = path.join(root, relativeFile);
+    if (fs.existsSync(file) && fs.statSync(file).isFile()) files.push(file);
+  }
+
+  const githubInstructionsDir = path.join(root, '.github', 'instructions');
+  if (fs.existsSync(githubInstructionsDir)) {
+    files.push(...walk(githubInstructionsDir).filter((file) => file.endsWith('.instructions.md')));
+  }
+
+  const cursorRulesDir = path.join(root, '.cursor', 'rules');
+  if (fs.existsSync(cursorRulesDir)) {
+    files.push(...walk(cursorRulesDir).filter((file) => ['.md', '.mdc', '.txt'].includes(path.extname(file))));
+  }
+
+  return files;
+}
+
+function isAgentInstructionFile(file, root) {
+  const relativeFile = path.relative(root, file).split(path.sep).join('/');
+  const normalizedFile = file.split(path.sep).join('/');
+  return (
+    agentInstructionFiles.has(relativeFile) ||
+    agentInstructionFiles.has(path.basename(file)) ||
+    /\/\.github\/copilot-instructions\.md$/i.test(normalizedFile) ||
+    /^\.github\/instructions\/.+\.instructions\.md$/i.test(relativeFile) ||
+    /\/\.github\/instructions\/.+\.instructions\.md$/i.test(normalizedFile) ||
+    /^\.cursor\/rules\/.+\.(?:md|mdc|txt)$/i.test(relativeFile) ||
+    /\/\.cursor\/rules\/.+\.(?:md|mdc|txt)$/i.test(normalizedFile)
+  );
+}
+
+function isDefensiveInstructionLine(line) {
+  const trimmed = line.trim().replace(/^[-*]\s*/, '');
+  if (/^(?:never|do not|don't)\s+ask\b/i.test(trimmed)) return false;
+  return /^(?:do not|don't|avoid|refuse|must not|should not|never use|disable)\b/i.test(trimmed);
 }
 
 function windowAround(lines, index, radius) {

@@ -48,6 +48,11 @@ const ruleActions = {
     'Pin third-party actions to full commit SHAs in agent workflows.',
     'Review action updates before changing pins.',
     'Prefer official or internally reviewed actions for privileged jobs.'
+  ],
+  AWG012: [
+    'Remove persistent instructions that tell agents to bypass approvals, confirmations, or permission checks.',
+    'Tell agents to treat issue, PR, comment, branch, and artifact text as untrusted data instead of commands.',
+    'Keep AGENTS.md, CLAUDE.md, GEMINI.md, Copilot instructions, and Cursor rules aligned with the workflow permission model.'
   ]
 };
 
@@ -80,9 +85,9 @@ export function renderMigrationPlan(result) {
   const lines = [
     '# Agentic Workflow Guard Migration Plan',
     '',
-    `Scanned workflow files: **${plan.summary.scannedFiles}**`,
+    `Scanned files: **${plan.summary.scannedFiles}**`,
     `Findings to migrate: **${plan.summary.findings}**`,
-    `Affected workflow files: **${plan.summary.files}**`,
+    `Affected files: **${plan.summary.files}**`,
     `Highest severity: **${plan.summary.highest}**`,
     '',
     'Goal: move from agent jobs that can read untrusted GitHub text and directly act, to a two-stage pattern where the agent proposes structured output and a trusted layer validates what can happen next.',
@@ -161,6 +166,7 @@ function riskShapeFor(findings) {
   if ([...rules].some((rule) => writeRules.has(rule))) pieces.push('privileged write path exists');
   if (rules.has('AWG005')) pieces.push('secrets are in scope');
   if (rules.has('AWG010')) pieces.push('agent workflow depends on mutable third-party code');
+  if (rules.has('AWG012')) pieces.push('persistent agent instructions weaken review or permission boundaries');
 
   return pieces.length > 0 ? pieces.join('; ') : 'workflow hardening issue';
 }
@@ -197,6 +203,10 @@ function allowedOperationsFor(findings) {
 
   if (rules.has('AWG003')) {
     operations.add('metadata-only pull request updates after maintainer approval');
+  }
+
+  if (rules.has('AWG012')) {
+    operations.add('instruction-file update that explicitly treats GitHub event text as untrusted data');
   }
 
   operations.add('noop or missing-data report when validation fails');

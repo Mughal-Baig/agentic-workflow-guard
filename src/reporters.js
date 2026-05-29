@@ -15,15 +15,15 @@ const sarifSeverity = {
 
 export function renderText(result) {
   if (result.scannedFiles.length === 0) {
-    return 'No GitHub Actions workflow files found.';
+    return 'No GitHub Actions workflow or agent instruction files found.';
   }
 
   if (result.findings.length === 0) {
-    return `Scanned ${result.scannedFiles.length} workflow file(s). No findings.`;
+    return `Scanned ${result.scannedFiles.length} file(s). No findings.`;
   }
 
   const header = [
-    `Scanned ${result.scannedFiles.length} workflow file(s).`,
+    `Scanned ${result.scannedFiles.length} file(s).`,
     `Findings: ${result.summary.total} total, highest severity: ${result.summary.highest}.`
   ];
 
@@ -83,7 +83,7 @@ export function renderSarif(result) {
             driver: {
               name: 'Agentic Workflow Guard',
               informationUri: 'https://github.com/Mughal-Baig/agentic-workflow-guard',
-              semanticVersion: '1.2.0',
+              semanticVersion: '1.3.0',
               rules: Object.entries(ruleCatalog).map(([id, rule]) => ({
                 id,
                 name: id,
@@ -147,7 +147,7 @@ export function renderMarkdown(result) {
   const lines = [
     '# Agentic Workflow Guard Report',
     '',
-    `Scanned workflow files: **${result.scannedFiles.length}**`,
+    `Scanned files: **${result.scannedFiles.length}**`,
     `Findings: **${result.summary.total}**`,
     `Highest severity: **${result.summary.highest}**`,
     ''

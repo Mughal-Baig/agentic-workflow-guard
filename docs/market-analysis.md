@@ -158,6 +158,20 @@ Agentic Workflow Guard now supports:
 
 The scorecard is intentionally simple: start at 100, subtract weighted penalties for critical, high, medium, and low findings, then show an A-F grade. This gives maintainers a quick public signal while keeping SARIF, attack graphs, and migration reports available for detailed review.
 
+## Deep Research Refresh: Agent Context Guard
+
+The next uniqueness gap is persistent agent instruction files. GitHub documents repository custom instructions through `.github/copilot-instructions.md`, OpenAI Codex documents `AGENTS.md`, and the public `agents.md` project positions `AGENTS.md` as a predictable place for coding-agent guidance. Claude Code also documents permission modes and warns that bypassing permissions is a special, dangerous mode.
+
+That means agent safety is no longer only in workflow YAML. A repository can have conservative GitHub Actions permissions while `AGENTS.md`, `CLAUDE.md`, `GEMINI.md`, Cursor rules, or Copilot instructions tell the agent to skip approval, obey issue comments, or expose credentials. General GitHub Actions linters do not inspect these files, and broad AI security scanners do not own the GitHub Actions plus persistent-instructions intersection.
+
+Agentic Workflow Guard now supports `AWG012` to scan common instruction files for risky persistent guidance:
+
+- bypassing approvals, confirmations, or permission prompts;
+- treating issue, PR, comment, branch, or artifact text as commands;
+- allowing secrets, tokens, API keys, or credentials to be printed, returned, or sent.
+
+This strengthens the project's position as an Agentic Workflow Injection guardrail instead of only another YAML scanner.
+
 ## Distribution Plan
 
 1. Publish the repo with a short demo GIF or screenshot.
@@ -174,6 +188,10 @@ The scorecard is intentionally simple: start at 100, subtract weighted penalties
 - GitHub SARIF upload docs: https://docs.github.com/en/code-security/how-tos/find-and-fix-code-vulnerabilities/integrate-with-existing-tools/uploading-a-sarif-file-to-github
 - GitHub Actions secure use reference: https://docs.github.com/en/enterprise-cloud@latest/actions/reference/security/secure-use
 - GitHub Agentic Workflows security architecture: https://github.github.com/gh-aw/
+- GitHub Copilot repository custom instructions: https://docs.github.com/en/copilot/how-tos/custom-instructions/adding-repository-custom-instructions-for-github-copilot
+- OpenAI Codex AGENTS.md documentation: https://github.com/openai/codex/blob/main/docs/agents_md.md
+- AGENTS.md project: https://github.com/openai/agents.md
+- Claude Code permission modes: https://code.claude.com/docs/en/permission-modes
 - OpenSSF Scorecard dangerous workflow check: https://github.com/ossf/scorecard/blob/main/docs/checks.md#dangerous-workflow
 - Semgrep inline ignore docs: https://semgrep.dev/docs/ignoring-files-folders-code
 - ESLint configuration comment descriptions: https://eslint.org/docs/latest/use/configure/rules#configuration-comment-descriptions

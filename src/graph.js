@@ -11,7 +11,8 @@ const impactByRule = {
   AWG008: 'Default token permissions may be broader than intended',
   AWG009: 'Untrusted artifacts can influence privileged jobs',
   AWG010: 'Mutable third-party action can change behavior',
-  AWG011: 'Suppression policy can hide real risk'
+  AWG011: 'Suppression policy can hide real risk',
+  AWG012: 'Persistent agent instructions can weaken CI guardrails'
 };
 
 export function buildAttackGraphs(result) {
@@ -42,7 +43,7 @@ export function renderGraphMarkdown(result) {
   const lines = [
     '# Agentic Workflow Guard Attack Graph',
     '',
-    `Scanned workflow files: **${result.scannedFiles.length}**`,
+    `Scanned files: **${result.scannedFiles.length}**`,
     `Findings: **${result.summary.total}**`,
     `Attack chains: **${attackGraph.summary.chains}**`,
     ''
@@ -212,6 +213,7 @@ function inferSource(finding) {
   if (match) return `GitHub event field: ${match[1] || match[2] || 'github context'}`;
   if (finding.ruleId === 'AWG009') return 'workflow_run artifact';
   if (finding.ruleId === 'AWG010') return 'third-party action ref';
+  if (finding.ruleId === 'AWG012') return 'persistent agent instruction file';
   return 'workflow configuration';
 }
 
@@ -220,6 +222,7 @@ function inferBoundary(finding) {
   if (finding.ruleId === 'AWG002') return 'run script interpolation';
   if (finding.ruleId === 'AWG003') return 'checkout of untrusted PR code';
   if (finding.ruleId === 'AWG007') return 'command execution sink';
+  if (finding.ruleId === 'AWG012') return 'agent instruction context';
   return 'workflow execution';
 }
 
@@ -227,6 +230,7 @@ function inferCapability(finding) {
   if (finding.ruleId === 'AWG006') return 'autonomous agent tool use';
   if (finding.ruleId === 'AWG007' || finding.ruleId === 'AWG002') return 'shell command execution';
   if (finding.ruleId === 'AWG010') return 'third-party action execution';
+  if (finding.ruleId === 'AWG012') return 'persistent prompt steering';
   return 'CI runner and agent tools';
 }
 
@@ -234,6 +238,7 @@ function inferAuthority(finding) {
   if (finding.ruleId === 'AWG004') return 'write-capable token';
   if (finding.ruleId === 'AWG005') return 'secret environment values';
   if (finding.ruleId === 'AWG008') return 'implicit token permissions';
+  if (finding.ruleId === 'AWG012') return 'agent policy context';
   return 'workflow permissions';
 }
 

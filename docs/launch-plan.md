@@ -39,6 +39,13 @@ Short pitch:
    ```
 
 9. Show the README badge and say: "Add an AWI risk badge to your repo before adding AI agents to CI."
+10. Show an unsafe `AGENTS.md` or `.github/copilot-instructions.md` line and run:
+
+   ```bash
+   node ./bin/awguard.js . --format text
+   ```
+
+11. Explain that AWGuard scans both the workflow and the persistent agent instructions that shape agent behavior.
 
 ## Release Checklist
 
@@ -50,6 +57,7 @@ Short pitch:
 - Include the AWI attack chain screenshot in social posts.
 - Include the migration report screenshot after the graph screenshot.
 - Include the AWI risk badge as the final screenshot because it is the easiest artifact for other maintainers to copy.
+- Include a short "workflow looked safe, AGENTS.md made it unsafe" example because it is the most surprising hook.
 
 ## Distribution Targets
 

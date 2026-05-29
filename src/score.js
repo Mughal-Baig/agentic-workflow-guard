@@ -50,7 +50,7 @@ export function renderScorecard(result) {
     '',
     `AWI score: **${score.grade} (${score.score}/100)**`,
     `Status: **${score.status}**`,
-    `Scanned workflow files: **${score.scannedFiles}**`,
+    `Scanned files: **${score.scannedFiles}**`,
     `Findings: **${score.findings}**`,
     `Highest severity: **${score.highest}**`,
     '',
@@ -90,6 +90,8 @@ export function renderBadgeJson(result) {
 }
 
 function actionFor(result, counts) {
+  const rules = new Set(result.findings.map((finding) => finding.ruleId));
+
   if (result.scannedFiles.length === 0) {
     return 'No GitHub Actions workflows were found. Add AWGuard when agent workflows are introduced.';
   }
@@ -99,6 +101,9 @@ function actionFor(result, counts) {
   }
 
   if (counts.high > 0) {
+    if (rules.has('AWG012')) {
+      return 'Review persistent agent instruction files before allowing AI agents to act in CI.';
+    }
     return 'Use the migration report to split agent proposal jobs from privileged apply jobs.';
   }
 
