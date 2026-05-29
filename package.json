@@ -1,6 +1,6 @@
 {
   "name": "awguard",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Scan GitHub Actions workflows for AI-agent injection, unsafe permissions, and untrusted prompt flows.",
   "type": "module",
   "homepage": "https://github.com/Mughal-Baig/agentic-workflow-guard#readme",

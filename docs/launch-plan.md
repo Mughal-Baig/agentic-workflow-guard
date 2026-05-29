@@ -32,6 +32,13 @@ Short pitch:
    ```
 
 7. Show the migration from unsafe agent job to read-only proposal job plus safe outputs or an approved apply job.
+8. Run:
+
+   ```bash
+   node ./bin/awguard.js . --format score
+   ```
+
+9. Show the README badge and say: "Add an AWI risk badge to your repo before adding AI agents to CI."
 
 ## Release Checklist
 
@@ -42,6 +49,7 @@ Short pitch:
 - Post with the headline: "I built a scanner that maps and migrates Agentic Workflow Injection in GitHub Actions."
 - Include the AWI attack chain screenshot in social posts.
 - Include the migration report screenshot after the graph screenshot.
+- Include the AWI risk badge as the final screenshot because it is the easiest artifact for other maintainers to copy.
 
 ## Distribution Targets
 

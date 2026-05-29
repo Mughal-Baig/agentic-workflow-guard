@@ -2,6 +2,7 @@ import path from 'node:path';
 import { findingFingerprint } from './fingerprints.js';
 import { renderGraphMarkdown, renderHtmlReport } from './graph.js';
 import { renderMigrationPlan } from './migration.js';
+import { renderBadgeJson, renderScorecard } from './score.js';
 import { ruleCatalog } from './scanner.js';
 
 const sarifSeverity = {
@@ -82,7 +83,7 @@ export function renderSarif(result) {
             driver: {
               name: 'Agentic Workflow Guard',
               informationUri: 'https://github.com/Mughal-Baig/agentic-workflow-guard',
-              semanticVersion: '1.1.1',
+              semanticVersion: '1.2.0',
               rules: Object.entries(ruleCatalog).map(([id, rule]) => ({
                 id,
                 name: id,
@@ -194,6 +195,14 @@ export function renderHtml(result) {
 
 export function renderMigration(result) {
   return renderMigrationPlan(result);
+}
+
+export function renderScore(result) {
+  return renderScorecard(result);
+}
+
+export function renderBadge(result) {
+  return renderBadgeJson(result);
 }
 
 export function renderGithubAnnotations(result) {

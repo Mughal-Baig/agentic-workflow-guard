@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0
+
+- Add `--format score` for an Agentic Workflow Injection scorecard.
+- Add `--format badge` for Shields.io endpoint badge JSON.
+- Add a checked-in AWI risk badge for the project README.
+
 ## 1.1.1
 
 - Add npm package metadata for the public `awguard` package.

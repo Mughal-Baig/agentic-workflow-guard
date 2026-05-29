@@ -12,5 +12,7 @@ Try:
 node ../bin/awguard.js unsafe-agent.yml --format graph
 node ../bin/awguard.js unsafe-agent.yml --format html --output awguard-report.html
 node ../bin/awguard.js unsafe-agent.yml --format migration
+node ../bin/awguard.js unsafe-agent.yml --format score
+node ../bin/awguard.js safe-agent.yml --format badge
 node ../bin/awguard.js unsafe-agent.yml --fix-dry-run
 ```

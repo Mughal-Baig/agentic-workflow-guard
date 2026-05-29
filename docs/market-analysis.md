@@ -139,6 +139,25 @@ The unscoped npm package name `agentic-workflow-guard` is already published by a
 
 The v1.1 package target is now `awguard`, matching the existing CLI binary and leaving the GitHub Action name unchanged.
 
+## Deep Research Refresh: Badge And Scorecard Hook
+
+The next reach improvement is a shareable AWI score and README badge. OpenSSF Scorecard has more than 5,000 GitHub stars and explicitly uses badges as a way for maintainers to show security posture. Shields.io is the common README-badge layer across GitHub projects. That pattern matters because a scanner hidden in CI logs does not travel; a badge travels with every repository that adopts it.
+
+Recent GitHub and web research suggests this gap is still open:
+
+- General GitHub Actions tools such as `zizmorcore/zizmor` and `rhysd/actionlint` are established, but they are not focused on Agentic Workflow Injection scoring.
+- Broad AI-agent scanners such as AgentShield and agentic-radar cover MCP, skills, and agent configuration, but they do not own a GitHub Actions AWI score badge.
+- GitHub search for `agentic workflow injection` shows only small early projects, which means the term is still young enough for a focused tool to become the reference implementation.
+- Shields.io endpoint badges are easy to adopt because they only need a small JSON document.
+
+Agentic Workflow Guard now supports:
+
+- `--format score` for a Markdown AWI scorecard.
+- `--format badge` for Shields.io endpoint JSON.
+- A checked-in project badge at `docs/awguard-badge.json`.
+
+The scorecard is intentionally simple: start at 100, subtract weighted penalties for critical, high, medium, and low findings, then show an A-F grade. This gives maintainers a quick public signal while keeping SARIF, attack graphs, and migration reports available for detailed review.
+
 ## Distribution Plan
 
 1. Publish the repo with a short demo GIF or screenshot.

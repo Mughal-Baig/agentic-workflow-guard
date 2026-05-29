@@ -3,6 +3,8 @@
 [![Test](https://github.com/Mughal-Baig/agentic-workflow-guard/actions/workflows/test.yml/badge.svg)](https://github.com/Mughal-Baig/agentic-workflow-guard/actions/workflows/test.yml)
 [![Code Scanning](https://github.com/Mughal-Baig/agentic-workflow-guard/actions/workflows/code-scanning.yml/badge.svg)](https://github.com/Mughal-Baig/agentic-workflow-guard/actions/workflows/code-scanning.yml)
 [![GitHub release](https://img.shields.io/github/v/release/Mughal-Baig/agentic-workflow-guard)](https://github.com/Mughal-Baig/agentic-workflow-guard/releases)
+[![npm](https://img.shields.io/npm/v/awguard)](https://www.npmjs.com/package/awguard)
+[![AWI risk](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Mughal-Baig/agentic-workflow-guard/main/docs/awguard-badge.json)](docs/awguard-badge.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 `agentic-workflow-guard` is a small, zero-dependency scanner for GitHub Actions workflows that use AI coding agents, LLMs, or automated review bots.
@@ -111,7 +113,7 @@ jobs:
 ## CLI
 
 ```bash
-awguard [path] [--config file] [--preset name] [--format text|json|markdown|github|sarif|graph|html|migration] [--output file] [--baseline file] [--write-baseline file] [--fix-dry-run] [--fail-on none|low|medium|high|critical]
+awguard [path] [--config file] [--preset name] [--format text|json|markdown|github|sarif|graph|html|migration|score|badge] [--output file] [--baseline file] [--write-baseline file] [--fix-dry-run] [--fail-on none|low|medium|high|critical]
 ```
 
 Examples:
@@ -122,6 +124,8 @@ node ./bin/awguard.js . --config awguard.config.json
 node ./bin/awguard.js . --preset strict --format graph
 node ./bin/awguard.js . --format html --output awguard-report.html
 node ./bin/awguard.js . --format migration --output awguard-migration.md
+node ./bin/awguard.js . --format score
+node ./bin/awguard.js . --format badge --output awguard-badge.json
 node ./bin/awguard.js . --fix-dry-run
 node ./bin/awguard.js . --format markdown --fail-on medium
 node ./bin/awguard.js . --format sarif --output awguard.sarif --fail-on none
@@ -215,6 +219,28 @@ untrusted GitHub event text
   -> safe outputs or approved apply job
 ```
 
+## AWI Score And Badge
+
+Generate a shareable Agentic Workflow Injection scorecard:
+
+```bash
+node ./bin/awguard.js . --format score
+```
+
+Generate a Shields.io endpoint badge JSON:
+
+```bash
+node ./bin/awguard.js . --format badge --output docs/awguard-badge.json
+```
+
+Then add a badge to your README:
+
+```markdown
+[![AWI risk](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/OWNER/REPO/main/docs/awguard-badge.json)](docs/awguard-badge.json)
+```
+
+The score starts at 100 and subtracts risk for critical, high, medium, and low findings. This makes AWGuard easy to show in a README without hiding the detailed SARIF, graph, and migration reports.
+
 ## Fix Dry Run
 
 Print remediation guidance without editing files:
@@ -265,6 +291,7 @@ If you omit rule ids, the suppression applies to all findings on the target line
 
 - Safe autofix for low-risk permission changes.
 - Safe-output migration patch previews for common triage and review bots.
+- Hosted AWI score API for dynamic cross-repository badges.
 - GitHub App integration for always-on repository monitoring.
 - Rule packs for Claude Code, Codex, Gemini, Copilot, Aider, and custom agents.
 - Public vulnerable workflow lab with attack and fix walkthroughs.
