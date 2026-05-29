@@ -92,6 +92,23 @@ Agentic Workflow Guard now supports:
 
 This improves public reach because teams can adopt the scanner without forking it or arguing with one-size-fits-all severity choices.
 
+## V1 Improvement: Attack Graph Reports
+
+The strongest unique hook is the attack graph report. Existing GitHub Actions scanners focus on workflow hygiene or supply-chain risk. Agentic Workflow Guard should own the Agentic Workflow Injection path:
+
+```text
+untrusted GitHub event text -> agent prompt -> tool capability -> authority -> impact
+```
+
+This is what makes the project easy to screenshot, explain, and share. It also follows the shape of AWI research more closely than a flat list of findings.
+
+The v1 release adds:
+
+- `--format graph` for Mermaid attack chains.
+- `--format html --output awguard-report.html` for a standalone report.
+- `--fix-dry-run` for safe remediation guidance.
+- Built-in presets for strict mode and common agent stacks.
+
 ## Distribution Plan
 
 1. Publish the repo with a short demo GIF or screenshot.

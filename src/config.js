@@ -1,20 +1,26 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { getPreset, listPresetNames } from './presets.js';
 import { ruleCatalog, severityRank } from './scanner.js';
 
 const configFileNames = ['awguard.config.json', '.awguard.json'];
 const configurableSeverities = Object.keys(severityRank).filter((severity) => severity !== 'none');
 
-export function loadConfig({ configPath = '', root = process.cwd() } = {}) {
+export function loadConfig({ configPath = '', root = process.cwd(), presets = [] } = {}) {
   const resolvedPath = resolveConfigPath(configPath, root);
   if (!resolvedPath) {
-    return { path: null, config: normalizeConfig({}) };
+    return { path: null, config: normalizeConfig({ extends: presets }) };
   }
 
   const parsed = JSON.parse(fs.readFileSync(resolvedPath, 'utf8'));
+  const configWithPresets = {
+    ...parsed,
+    extends: [...presets, ...toArray(parsed.extends)]
+  };
+
   return {
     path: resolvedPath,
-    config: normalizeConfig(parsed, resolvedPath)
+    config: normalizeConfig(configWithPresets, resolvedPath)
   };
 }
 
@@ -23,9 +29,42 @@ export function normalizeConfig(rawConfig = {}, source = 'config') {
     throw new Error(`${source} must contain a JSON object`);
   }
 
+  const mergedConfig = mergePresetConfigs(rawConfig, source);
+
   return {
-    rules: normalizeRules(rawConfig.rules || {}, source),
-    suppressions: normalizeSuppressions(rawConfig.suppressions || {}, source)
+    rules: normalizeRules(mergedConfig.rules || {}, source),
+    suppressions: normalizeSuppressions(mergedConfig.suppressions || {}, source)
+  };
+}
+
+function mergePresetConfigs(rawConfig, source) {
+  const presetNames = toArray(rawConfig.extends);
+  let merged = {};
+
+  for (const presetName of presetNames) {
+    const preset = getPreset(presetName);
+    if (!preset) {
+      throw new Error(`${source} references unknown preset: ${presetName}. Available presets: ${listPresetNames().join(', ')}`);
+    }
+    merged = mergeConfigObjects(merged, preset);
+  }
+
+  return mergeConfigObjects(merged, {
+    rules: rawConfig.rules || {},
+    suppressions: rawConfig.suppressions || {}
+  });
+}
+
+function mergeConfigObjects(base, override) {
+  return {
+    rules: {
+      ...(base.rules || {}),
+      ...(override.rules || {})
+    },
+    suppressions: {
+      ...(base.suppressions || {}),
+      ...(override.suppressions || {})
+    }
   };
 }
 
@@ -118,4 +157,10 @@ function ensureKnownRule(ruleId, source) {
 
 function isObject(value) {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function toArray(value) {
+  if (value === undefined || value === null || value === '') return [];
+  if (Array.isArray(value)) return value.map(String);
+  return [String(value)];
 }

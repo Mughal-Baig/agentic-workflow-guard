@@ -1,8 +1,23 @@
 # Agentic Workflow Guard
 
+[![Test](https://github.com/Mughal-Baig/agentic-workflow-guard/actions/workflows/test.yml/badge.svg)](https://github.com/Mughal-Baig/agentic-workflow-guard/actions/workflows/test.yml)
+[![Code Scanning](https://github.com/Mughal-Baig/agentic-workflow-guard/actions/workflows/code-scanning.yml/badge.svg)](https://github.com/Mughal-Baig/agentic-workflow-guard/actions/workflows/code-scanning.yml)
+[![GitHub release](https://img.shields.io/github/v/release/Mughal-Baig/agentic-workflow-guard)](https://github.com/Mughal-Baig/agentic-workflow-guard/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 `agentic-workflow-guard` is a small, zero-dependency scanner for GitHub Actions workflows that use AI coding agents, LLMs, or automated review bots.
 
 It looks for a new class of CI/CD risk: untrusted issue, pull request, comment, or branch text flowing into an AI agent prompt, then into write-capable tools, secrets, or shell scripts.
+
+Its unique output is an **Agentic Workflow Injection attack graph**:
+
+```mermaid
+flowchart LR
+  s["GitHub issue/comment/PR text"] --> p["AI agent prompt"]
+  p --> c["agent tools or shell"]
+  c --> a["secrets / write token"]
+  a --> i["repo modification or secret exposure"]
+```
 
 ## Why This Project Can Reach People
 
@@ -47,6 +62,7 @@ jobs:
       - uses: Mughal-Baig/agentic-workflow-guard@v0
         with:
           config: awguard.config.json
+          preset: strict
           fail-on: high
 ```
 
@@ -95,7 +111,7 @@ jobs:
 ## CLI
 
 ```bash
-awguard [path] [--config file] [--format text|json|markdown|github|sarif] [--output file] [--baseline file] [--write-baseline file] [--fail-on none|low|medium|high|critical]
+awguard [path] [--config file] [--preset name] [--format text|json|markdown|github|sarif|graph|html] [--output file] [--baseline file] [--write-baseline file] [--fix-dry-run] [--fail-on none|low|medium|high|critical]
 ```
 
 Examples:
@@ -103,6 +119,9 @@ Examples:
 ```bash
 node ./bin/awguard.js examples/unsafe-agent.yml
 node ./bin/awguard.js . --config awguard.config.json
+node ./bin/awguard.js . --preset strict --format graph
+node ./bin/awguard.js . --format html --output awguard-report.html
+node ./bin/awguard.js . --fix-dry-run
 node ./bin/awguard.js . --format markdown --fail-on medium
 node ./bin/awguard.js . --format sarif --output awguard.sarif --fail-on none
 node ./bin/awguard.js . --write-baseline awguard.baseline.json
@@ -151,6 +170,40 @@ Agentic Workflow Guard automatically loads `awguard.config.json` or `.awguard.js
 Rule values can be `"off"`, `"low"`, `"medium"`, `"high"`, or `"critical"`.
 See `examples/awguard.config.example.json` for a complete template.
 
+Built-in presets:
+
+- `strict`
+- `claude-code`
+- `codex`
+- `aider`
+- `triage-bot`
+
+Use them with `--preset strict` or in config with `"extends": ["strict"]`.
+
+## Attack Graph And HTML Reports
+
+Generate a Mermaid attack graph:
+
+```bash
+node ./bin/awguard.js examples/unsafe-agent.yml --format graph
+```
+
+Generate a standalone HTML report:
+
+```bash
+node ./bin/awguard.js examples/unsafe-agent.yml --format html --output awguard-report.html
+```
+
+The report maps source, prompt boundary, capability, authority, and impact for each finding.
+
+## Fix Dry Run
+
+Print remediation guidance without editing files:
+
+```bash
+node ./bin/awguard.js examples/unsafe-agent.yml --fix-dry-run
+```
+
 ## Inline Suppressions
 
 Suppressions are for reviewed false positives. They must include a reason after `--`.
@@ -191,10 +244,10 @@ If you omit rule ids, the suppression applies to all findings on the target line
 
 ## Roadmap
 
-- Shareable rule presets for common agent stacks.
-- Autofix suggestions for `permissions` and safe env-variable patterns.
+- Safe autofix for low-risk permission changes.
+- GitHub App integration for always-on repository monitoring.
 - Rule packs for Claude Code, Codex, Gemini, Copilot, Aider, and custom agents.
-- Optional taint graph output for security reviews.
+- Public vulnerable workflow lab with attack and fix walkthroughs.
 
 ## Research Backing
 

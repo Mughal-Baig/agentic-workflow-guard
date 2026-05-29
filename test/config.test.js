@@ -39,6 +39,20 @@ test('rejects unknown configured rule ids', () => {
   );
 });
 
+test('normalizes named presets and explicit overrides', () => {
+  const config = normalizeConfig({
+    extends: ['strict', 'triage-bot'],
+    rules: {
+      AWG010: 'off'
+    }
+  });
+
+  assert.equal(config.rules.AWG001.severity, 'critical');
+  assert.equal(config.rules.AWG006.severity, 'critical');
+  assert.equal(config.rules.AWG010.enabled, false);
+  assert.equal(config.suppressions.minimumReasonLength, 30);
+});
+
 test('scanner applies disabled rules and severity overrides', () => {
   const workflow = `
 on: [workflow_dispatch]

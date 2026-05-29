@@ -3,18 +3,22 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { applyBaseline, createBaseline, loadBaseline, writeBaseline } from './baseline.js';
 import { loadConfig } from './config.js';
+import { renderFixDryRun } from './remediation.js';
 import { scanWorkflows, severityRank } from './scanner.js';
-import { renderGithubAnnotations, renderJson, renderMarkdown, renderSarif, renderText } from './reporters.js';
+import { renderGithubAnnotations, renderGraph, renderHtml, renderJson, renderMarkdown, renderSarif, renderText } from './reporters.js';
 
 const HELP = `Agentic Workflow Guard
 
 Usage:
-  awguard [path] [--config file] [--format text|json|markdown|github|sarif] [--output file] [--baseline file] [--write-baseline file] [--fail-on none|low|medium|high|critical]
+  awguard [path] [--config file] [--preset name] [--format text|json|markdown|github|sarif|graph|html] [--output file] [--baseline file] [--write-baseline file] [--fix-dry-run] [--fail-on none|low|medium|high|critical]
 
 Examples:
   awguard .
   awguard . --config awguard.config.json
+  awguard . --preset strict --format graph
   awguard .github/workflows/agent.yml --format markdown --fail-on high
+  awguard . --format html --output awguard-report.html
+  awguard . --fix-dry-run
   awguard . --format sarif --output awguard.sarif --fail-on none
   awguard . --write-baseline awguard.baseline.json
   awguard . --baseline awguard.baseline.json --fail-on high
@@ -29,7 +33,7 @@ export async function runCli(args, env = process.env) {
     return;
   }
 
-  const { config } = loadConfig({ configPath: options.config, root: options.path });
+  const { config } = loadConfig({ configPath: options.config, root: options.path, presets: options.presets });
   let result = scanWorkflows({ root: options.path, config });
 
   if (options.baseline) {
@@ -41,7 +45,7 @@ export async function runCli(args, env = process.env) {
     console.error(`Wrote baseline ${baselineFile}`);
   }
 
-  const output = render(result, options.format);
+  const output = options.fixDryRun ? renderFixDryRun(result) : render(result, options.format);
 
   if (options.output) {
     const outputFile = writeOutput(options.output, output);
@@ -66,6 +70,8 @@ export function parseArgs(args, env = {}) {
     baseline: readInput(env, 'baseline') || '',
     writeBaseline: readInput(env, 'write_baseline') || readInput(env, 'write-baseline') || '',
     config: readInput(env, 'config') || '',
+    presets: splitList(readInput(env, 'preset') || readInput(env, 'presets') || ''),
+    fixDryRun: readBoolInput(env, 'fix_dry_run') || readBoolInput(env, 'fix-dry-run'),
     help: false
   };
 
@@ -98,6 +104,12 @@ export function parseArgs(args, env = {}) {
       options.config = args[++index];
     } else if (arg.startsWith('--config=')) {
       options.config = arg.slice('--config='.length);
+    } else if (arg === '--preset') {
+      options.presets.push(...splitList(args[++index]));
+    } else if (arg.startsWith('--preset=')) {
+      options.presets.push(...splitList(arg.slice('--preset='.length)));
+    } else if (arg === '--fix-dry-run') {
+      options.fixDryRun = true;
     } else if (!arg.startsWith('-')) {
       options.path = arg;
     } else {
@@ -105,7 +117,7 @@ export function parseArgs(args, env = {}) {
     }
   }
 
-  validateEnum('format', options.format, ['text', 'json', 'markdown', 'github', 'sarif']);
+  validateEnum('format', options.format, ['text', 'json', 'markdown', 'github', 'sarif', 'graph', 'html']);
   validateEnum('fail-on', options.failOn, ['none', 'low', 'medium', 'high', 'critical']);
 
   return options;
@@ -120,8 +132,22 @@ function render(result, format) {
   if (format === 'json') return renderJson(result);
   if (format === 'markdown') return renderMarkdown(result);
   if (format === 'sarif') return renderSarif(result);
+  if (format === 'graph') return renderGraph(result);
+  if (format === 'html') return renderHtml(result);
   if (format === 'github') return renderGithubAnnotations(result);
   return renderText(result);
+}
+
+function splitList(value) {
+  return String(value || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function readBoolInput(env, name) {
+  const value = readInput(env, name);
+  return value === 'true' || value === '1' || value === 'yes';
 }
 
 function writeOutput(file, output) {

@@ -7,7 +7,7 @@ inputs:
     required: false
     default: .
   format:
-    description: Output format: github, text, json, markdown, or sarif.
+    description: Output format: github, text, json, markdown, sarif, graph, or html.
     required: false
     default: github
   fail-on:
@@ -30,6 +30,14 @@ inputs:
     description: Optional path to an Agentic Workflow Guard JSON config file.
     required: false
     default: ''
+  preset:
+    description: Optional comma-separated presets such as strict, claude-code, codex, aider, or triage-bot.
+    required: false
+    default: ''
+  fix-dry-run:
+    description: Print remediation guidance instead of the normal report.
+    required: false
+    default: 'false'
 runs:
   using: node20
   main: bin/awguard.js

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.0
+
+- Add `graph` output with Mermaid attack-chain diagrams.
+- Add standalone `html` attack graph reports.
+- Add `--fix-dry-run` remediation guidance.
+- Add built-in presets: `strict`, `claude-code`, `codex`, `aider`, and `triage-bot`.
+- Add README launch polish with badges and an attack graph hook.
+
 ## 0.4.0
 
 - Add `awguard.config.json` and `.awguard.json` auto-discovery.
