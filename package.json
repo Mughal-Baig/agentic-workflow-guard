@@ -1,7 +1,7 @@
 {
   "name": "awguard",
-  "version": "1.3.0",
-  "description": "Scan GitHub Actions workflows for AI-agent injection, unsafe permissions, and untrusted prompt flows.",
+  "version": "1.4.0",
+  "description": "Scan GitHub Actions workflows, agent instructions, and MCP configs for AI-agent injection and unsafe tool boundaries.",
   "type": "module",
   "homepage": "https://github.com/Mughal-Baig/agentic-workflow-guard#readme",
   "bugs": {
@@ -27,7 +27,9 @@
     "devsecops",
     "llm",
     "agentic-workflow-injection",
-    "safe-outputs"
+    "safe-outputs",
+    "mcp",
+    "model-context-protocol"
   ],
   "license": "MIT",
   "engines": {

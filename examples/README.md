@@ -5,6 +5,7 @@
 - `suppressed-agent.yml`: demonstrates audited inline suppressions.
 - `pull-request-target.yml`: demonstrates privileged PR checkout risk.
 - `.github/copilot-instructions.md`: demonstrates risky persistent agent instruction guidance.
+- `.mcp.json`: demonstrates mutable MCP server packages and committed MCP credentials.
 - `awguard.config.example.json`: sample config with a strict preset and overrides.
 
 Try:
@@ -15,6 +16,7 @@ node ../bin/awguard.js unsafe-agent.yml --format html --output awguard-report.ht
 node ../bin/awguard.js unsafe-agent.yml --format migration
 node ../bin/awguard.js unsafe-agent.yml --format score
 node ../bin/awguard.js safe-agent.yml --format badge
+node ../bin/awguard.js .mcp.json --format text
 node ../bin/awguard.js . --format text
 node ../bin/awguard.js unsafe-agent.yml --fix-dry-run
 ```

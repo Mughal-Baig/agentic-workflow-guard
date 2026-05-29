@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
-import { scanAgentInstructionText, scanWorkflowText, scanWorkflows } from '../src/scanner.js';
+import { scanAgentInstructionText, scanMcpConfigText, scanWorkflowText, scanWorkflows } from '../src/scanner.js';
 
 test('detects untrusted issue comments flowing into privileged agent workflow', () => {
   const workflow = `
@@ -244,4 +244,79 @@ jobs:
 
   assert.equal(result.scannedFiles.length, 2);
   assert.equal(result.findings.some((finding) => finding.ruleId === 'AWG012' && finding.file === 'AGENTS.md'), true);
+});
+
+test('detects mutable MCP packages and hardcoded MCP secrets', () => {
+  const findings = scanMcpConfigText(
+    `
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "ghp_123456789012345678901234567890123456"
+      }
+    }
+  }
+}
+`,
+    '.mcp.json'
+  );
+  const rules = findings.map((finding) => finding.ruleId);
+
+  assert.deepEqual(rules, ['AWG013', 'AWG014']);
+});
+
+test('keeps pinned MCP packages and prompted secrets quiet', () => {
+  const findings = scanMcpConfigText(
+    `
+{
+  // VS Code MCP configs often allow comments.
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "github-token",
+      "password": true,
+    },
+  ],
+  "servers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github@1.2.3"],
+      "env": {
+        "GITHUB_TOKEN": "\${input:github-token}"
+      },
+    },
+  },
+}
+`,
+    '.vscode/mcp.json'
+  );
+
+  assert.deepEqual(findings, []);
+});
+
+test('discovers MCP config files alongside workflows', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'awguard-mcp-context-'));
+  const vscodeDir = path.join(root, '.vscode');
+  fs.mkdirSync(vscodeDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(vscodeDir, 'mcp.json'),
+    `
+{
+  "servers": {
+    "filesystem": {
+      "command": "uvx",
+      "args": ["mcp-server-filesystem@latest"]
+    }
+  }
+}
+`
+  );
+
+  const result = scanWorkflows({ root });
+
+  assert.equal(result.scannedFiles.length, 1);
+  assert.equal(result.findings.some((finding) => finding.ruleId === 'AWG013' && finding.file === '.vscode/mcp.json'), true);
 });

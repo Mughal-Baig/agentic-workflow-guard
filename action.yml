@@ -1,9 +1,9 @@
 name: Agentic Workflow Guard
-description: Scan GitHub Actions workflows and agent instruction files for AI-agent injection and unsafe permission patterns.
+description: Scan GitHub Actions workflows, agent instruction files, and MCP configs for AI-agent injection and unsafe tool boundaries.
 author: agentic-workflow-guard
 inputs:
   path:
-    description: Repository path, workflow file, or agent instruction file to scan.
+    description: Repository path, workflow file, agent instruction file, or MCP config file to scan.
     required: false
     default: .
   format:

@@ -15,7 +15,7 @@ const sarifSeverity = {
 
 export function renderText(result) {
   if (result.scannedFiles.length === 0) {
-    return 'No GitHub Actions workflow or agent instruction files found.';
+    return 'No GitHub Actions workflow, agent instruction, or MCP config files found.';
   }
 
   if (result.findings.length === 0) {
@@ -83,7 +83,7 @@ export function renderSarif(result) {
             driver: {
               name: 'Agentic Workflow Guard',
               informationUri: 'https://github.com/Mughal-Baig/agentic-workflow-guard',
-              semanticVersion: '1.3.0',
+              semanticVersion: '1.4.0',
               rules: Object.entries(ruleCatalog).map(([id, rule]) => ({
                 id,
                 name: id,
@@ -100,7 +100,7 @@ export function renderSarif(result) {
                   level: sarifSeverity[rule.severity].level
                 },
                 properties: {
-                  tags: ['security', 'github-actions', 'ai-agent', 'prompt-injection'],
+                  tags: ['security', 'github-actions', 'ai-agent', 'prompt-injection', 'mcp'],
                   precision: 'medium',
                   'problem.severity': sarifSeverity[rule.severity].level,
                   'security-severity': sarifSeverity[rule.severity].score

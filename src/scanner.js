@@ -25,6 +25,20 @@ const agentInstructionFiles = new Set([
   '.github/copilot-instructions.md'
 ]);
 
+const mcpConfigFiles = new Set([
+  '.mcp.json',
+  'mcp.json',
+  '.vscode/mcp.json',
+  '.cursor/mcp.json',
+  '.windsurf/mcp_config.json',
+  '.codeium/windsurf/mcp_config.json',
+  'cline_mcp_settings.json',
+  '.cline/mcp_settings.json',
+  '.roo/mcp.json',
+  '.kilocode/mcp.json',
+  'claude_desktop_config.json'
+]);
+
 const untrustedFieldPattern =
   /\${{\s*github\.(?:event\.[\w.-]+\.)?(?:body|default_branch|email|head_ref|label|message|name|page_name|ref|title)\s*}}|github\.(?:event\.[\w.-]+\.)?(?:body|default_branch|email|head_ref|label|message|name|page_name|ref|title)/i;
 
@@ -53,6 +67,18 @@ const untrustedCommandInstructionPattern =
 
 const secretExposureInstructionPattern =
   /\b(?:print|echo|log|include|send|expose|return|paste)\b.{0,80}\b(?:secret|secrets|token|tokens|api key|api keys|apikey|apikeys|credential|credentials|password|passwords)\b/i;
+
+const mcpPackageRunnerCommands = new Set(['npx', 'pnpx', 'bunx', 'uvx', 'pipx']);
+
+const mcpShellCommands = new Set(['bash', 'sh', 'zsh', 'fish', 'cmd', 'powershell', 'pwsh']);
+
+const mcpSecretKeyPattern =
+  /\b(?:authorization|auth|api[_-]?key|apikey|token|secret|password|passwd|credential|client[_-]?secret|cookie|session)\b/i;
+
+const mcpSecretFlagPattern = /^--?(?:api[_-]?key|apikey|token|secret|password|passwd|credential|client[_-]?secret|auth|authorization)(?:=|$)/i;
+
+const mcpSecretValuePattern =
+  /\b(?:Bearer\s+[A-Za-z0-9._~+/=-]{8,}|ghp_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,}|sk-[A-Za-z0-9_-]{12,}|xox[baprs]-[A-Za-z0-9-]{10,}|AKIA[0-9A-Z]{16})\b/i;
 
 const untrustedTriggers = new Set([
   'discussion_comment',
@@ -137,6 +163,18 @@ export const ruleCatalog = {
     severity: 'high',
     suggestion:
       'Keep AGENTS.md, CLAUDE.md, GEMINI.md, Copilot instructions, and other persistent agent instruction files conservative. Do not tell agents to bypass approvals, follow untrusted issue/PR text as commands, or expose secrets.'
+  },
+  AWG013: {
+    title: 'MCP config starts mutable or shell-based tool servers',
+    severity: 'high',
+    suggestion:
+      'Pin MCP server packages to exact versions or container digests, avoid shell wrappers, and review project-scoped MCP servers before agents can use them.'
+  },
+  AWG014: {
+    title: 'MCP config hardcodes secrets or auth material',
+    severity: 'critical',
+    suggestion:
+      'Move MCP credentials into input prompts, environment variables, or a secret manager. Do not commit bearer tokens, API keys, passwords, or auth headers in MCP config files.'
   }
 };
 
@@ -236,10 +274,45 @@ export function scanAgentInstructionText(text, file = 'AGENTS.md', root = proces
   return context.findings;
 }
 
+export function scanMcpConfigText(text, file = '.mcp.json', root = process.cwd(), config = {}) {
+  const lines = text.split(/\r?\n/);
+  const { suppressions, invalidSuppressions } = collectSuppressions(lines, config.suppressions || {});
+  const context = {
+    file,
+    relativeFile: path.isAbsolute(file) ? path.relative(root, file) || path.basename(file) : file,
+    lines,
+    runBlocks: new Set(),
+    triggers: new Set(),
+    hasAgent: true,
+    hasPromptBoundary: true,
+    hasUntrustedTrigger: false,
+    hasPermissionBlock: false,
+    hasBroadPermission: false,
+    hasSecret: false,
+    config,
+    suppressions,
+    invalidSuppressions,
+    suppressedFindings: [],
+    findings: [],
+    seen: new Set()
+  };
+
+  detectInvalidSuppressions(context);
+
+  const parsed = parseJsonConfig(text);
+  if (!parsed.ok) return context.findings;
+
+  detectMcpConfigRisks(context, parsed.value);
+  return context.findings;
+}
+
 function scanFile(file, root, config) {
   const text = fs.readFileSync(file, 'utf8');
   if (isAgentInstructionFile(file, root)) {
     return scanAgentInstructionText(text, file, root, config);
+  }
+  if (isMcpConfigFile(file, root)) {
+    return scanMcpConfigText(text, file, root, config);
   }
   return scanWorkflowText(text, file, root, config);
 }
@@ -251,7 +324,13 @@ function discoverScanFiles(root) {
 
   const stat = fs.statSync(root);
   if (stat.isFile()) {
-    return workflowExtensions.has(path.extname(root)) || isAgentInstructionFile(root, path.dirname(root)) ? [root] : [];
+    return (
+      workflowExtensions.has(path.extname(root)) ||
+      isAgentInstructionFile(root, path.dirname(root)) ||
+      isMcpConfigFile(root, path.dirname(root))
+    )
+      ? [root]
+      : [];
   }
 
   const files = [];
@@ -261,6 +340,7 @@ function discoverScanFiles(root) {
   }
 
   files.push(...discoverAgentInstructionFiles(root));
+  files.push(...discoverMcpConfigFiles(root));
   return [...new Set(files)].sort();
 }
 
@@ -458,6 +538,69 @@ function detectRiskyAgentInstructions(context) {
       });
     }
   });
+}
+
+function detectMcpConfigRisks(context, config) {
+  const servers = collectMcpServers(config);
+
+  for (const server of servers) {
+    detectMutableMcpServer(context, server);
+    detectMcpSecretMaterial(context, server);
+  }
+}
+
+function detectMutableMcpServer(context, server) {
+  const command = stringValue(server.config.command);
+  const args = arrayOfStrings(server.config.args);
+  const baseCommand = normalizeCommand(command);
+  const evidence = renderMcpCommandEvidence(server, command, args);
+
+  if (mcpShellCommands.has(baseCommand)) {
+    addFinding(context, 'AWG013', locateMcpLine(context, server, command), {
+      evidence,
+      message: 'A project-scoped MCP server starts through a shell interpreter.'
+    });
+    return;
+  }
+
+  if (args.some((arg) => /\bcurl\b.+\|\s*(?:bash|sh)\b|\b(?:bash|sh)\s+-c\b/i.test(arg))) {
+    addFinding(context, 'AWG013', locateMcpLine(context, server, args.join(' ')), {
+      evidence,
+      message: 'A project-scoped MCP server uses a shell execution pattern in its arguments.'
+    });
+    return;
+  }
+
+  const packageSpec = findMcpPackageSpec(baseCommand, args);
+  if (packageSpec && isMutablePackageSpec(packageSpec)) {
+    addFinding(context, 'AWG013', locateMcpLine(context, server, packageSpec), {
+      evidence,
+      message: `MCP server "${server.name}" starts from a mutable package spec: ${packageSpec}.`
+    });
+  }
+
+  const dockerImage = findDockerImageSpec(baseCommand, args);
+  if (dockerImage && isMutableDockerImage(dockerImage)) {
+    addFinding(context, 'AWG013', locateMcpLine(context, server, dockerImage), {
+      evidence,
+      message: `MCP server "${server.name}" starts from a mutable container image: ${dockerImage}.`
+    });
+  }
+}
+
+function detectMcpSecretMaterial(context, server) {
+  const secretLocations = [];
+  collectSecretLocations(server.config.env, ['env'], secretLocations);
+  collectSecretLocations(server.config.headers, ['headers'], secretLocations);
+  collectSecretLocations(server.config.oauth, ['oauth'], secretLocations);
+  collectSecretArgs(arrayOfStrings(server.config.args), secretLocations);
+
+  for (const location of secretLocations) {
+    addFinding(context, 'AWG014', locateMcpLine(context, server, location.value || location.key), {
+      evidence: `MCP server "${server.name}" ${location.path}: ${redactSecretEvidence(location.value)}`,
+      message: `MCP server "${server.name}" appears to hardcode secret or authorization material.`
+    });
+  }
 }
 
 function addFinding(context, ruleId, line, overrides = {}) {
@@ -696,6 +839,17 @@ function discoverAgentInstructionFiles(root) {
   return files;
 }
 
+function discoverMcpConfigFiles(root) {
+  const files = [];
+
+  for (const relativeFile of mcpConfigFiles) {
+    const file = path.join(root, relativeFile);
+    if (fs.existsSync(file) && fs.statSync(file).isFile()) files.push(file);
+  }
+
+  return files;
+}
+
 function isAgentInstructionFile(file, root) {
   const relativeFile = path.relative(root, file).split(path.sep).join('/');
   const normalizedFile = file.split(path.sep).join('/');
@@ -710,10 +864,319 @@ function isAgentInstructionFile(file, root) {
   );
 }
 
+function isMcpConfigFile(file, root) {
+  const relativeFile = path.relative(root, file).split(path.sep).join('/');
+  const normalizedFile = file.split(path.sep).join('/');
+  return (
+    mcpConfigFiles.has(relativeFile) ||
+    /(?:^|\/)\.mcp\.json$/i.test(normalizedFile) ||
+    /(?:^|\/)mcp\.json$/i.test(normalizedFile) ||
+    /(?:^|\/)mcp_config\.json$/i.test(normalizedFile) ||
+    /(?:^|\/)cline_mcp_settings\.json$/i.test(normalizedFile) ||
+    /(?:^|\/)claude_desktop_config\.json$/i.test(normalizedFile)
+  );
+}
+
 function isDefensiveInstructionLine(line) {
   const trimmed = line.trim().replace(/^[-*]\s*/, '');
   if (/^(?:never|do not|don't)\s+ask\b/i.test(trimmed)) return false;
   return /^(?:do not|don't|avoid|refuse|must not|should not|never use|disable)\b/i.test(trimmed);
+}
+
+function parseJsonConfig(text) {
+  try {
+    return { ok: true, value: JSON.parse(stripJsonCommentsAndTrailingCommas(text)) };
+  } catch (error) {
+    return { ok: false, error };
+  }
+}
+
+function stripJsonCommentsAndTrailingCommas(text) {
+  let output = '';
+  let inString = false;
+  let escaping = false;
+  let inLineComment = false;
+  let inBlockComment = false;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+    const next = text[index + 1];
+
+    if (inLineComment) {
+      if (char === '\n') {
+        inLineComment = false;
+        output += char;
+      }
+      continue;
+    }
+
+    if (inBlockComment) {
+      if (char === '*' && next === '/') {
+        inBlockComment = false;
+        index += 1;
+      }
+      continue;
+    }
+
+    if (inString) {
+      output += char;
+      if (escaping) {
+        escaping = false;
+      } else if (char === '\\') {
+        escaping = true;
+      } else if (char === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (char === '"') {
+      inString = true;
+      output += char;
+      continue;
+    }
+
+    if (char === '/' && next === '/') {
+      inLineComment = true;
+      index += 1;
+      continue;
+    }
+
+    if (char === '/' && next === '*') {
+      inBlockComment = true;
+      index += 1;
+      continue;
+    }
+
+    output += char;
+  }
+
+  return removeTrailingCommas(output);
+}
+
+function removeTrailingCommas(text) {
+  let output = '';
+  let inString = false;
+  let escaping = false;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+
+    if (inString) {
+      output += char;
+      if (escaping) {
+        escaping = false;
+      } else if (char === '\\') {
+        escaping = true;
+      } else if (char === '"') {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (char === '"') {
+      inString = true;
+      output += char;
+      continue;
+    }
+
+    if (char === ',') {
+      const rest = text.slice(index + 1);
+      if (/^\s*[}\]]/.test(rest)) continue;
+    }
+
+    output += char;
+  }
+
+  return output;
+}
+
+function collectMcpServers(config) {
+  const servers = [];
+  collectMcpServerContainer(config?.mcpServers, 'mcpServers', servers);
+  collectMcpServerContainer(config?.servers, 'servers', servers);
+
+  if (isPlainObject(config?.projects)) {
+    for (const [project, projectConfig] of Object.entries(config.projects)) {
+      collectMcpServerContainer(projectConfig?.mcpServers, `projects.${project}.mcpServers`, servers);
+    }
+  }
+
+  return servers;
+}
+
+function collectMcpServerContainer(container, source, servers) {
+  if (!isPlainObject(container)) return;
+
+  for (const [name, serverConfig] of Object.entries(container)) {
+    if (!isPlainObject(serverConfig)) continue;
+    servers.push({ name, source, config: serverConfig });
+  }
+}
+
+function findMcpPackageSpec(baseCommand, args) {
+  if (mcpPackageRunnerCommands.has(baseCommand)) {
+    return args.find((arg) => isPackageLikeSpec(arg) && !arg.startsWith('-')) || '';
+  }
+
+  if (baseCommand === 'uv') {
+    const fromIndex = args.indexOf('--from');
+    if (fromIndex !== -1 && args[fromIndex + 1]) return args[fromIndex + 1];
+    if (args[0] === 'tool' && ['run', 'install'].includes(args[1])) {
+      return args.find((arg, index) => index > 1 && isPackageLikeSpec(arg) && !arg.startsWith('-')) || '';
+    }
+  }
+
+  return '';
+}
+
+function isMutablePackageSpec(spec) {
+  if (!spec || spec.startsWith('.') || spec.startsWith('/') || spec.startsWith('${')) return false;
+  if (/^(?:https?|git\+?ssh|git\+?https?):/i.test(spec)) return true;
+  if (/@latest(?:$|[#?])/.test(spec)) return true;
+
+  const atIndex = spec.startsWith('@') ? spec.indexOf('@', 1) : spec.indexOf('@');
+  if (atIndex === -1) return true;
+
+  const version = spec.slice(atIndex + 1);
+  return version.length === 0 || version === 'latest';
+}
+
+function isPackageLikeSpec(spec) {
+  if (!spec || spec.startsWith('.') || spec.startsWith('/') || spec.startsWith('${')) return false;
+  if (/^(?:https?|git\+?ssh|git\+?https?):/i.test(spec)) return true;
+  return /^@?[\w.-]+(?:\/[\w.-]+)?(?:@[\w.*^~+-][\w.*^~+-]*)?$/.test(spec);
+}
+
+function findDockerImageSpec(baseCommand, args) {
+  if (!['docker', 'podman'].includes(baseCommand)) return '';
+  const runIndex = args.indexOf('run');
+  if (runIndex === -1) return '';
+
+  const optionsWithValues = new Set([
+    '-e',
+    '--env',
+    '--env-file',
+    '-v',
+    '--volume',
+    '-p',
+    '--publish',
+    '--name',
+    '--network',
+    '-w',
+    '--workdir'
+  ]);
+
+  for (let index = runIndex + 1; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === '--') continue;
+    if (optionsWithValues.has(arg)) {
+      index += 1;
+      continue;
+    }
+    if (arg.startsWith('--') && arg.includes('=')) continue;
+    if (arg.startsWith('-')) continue;
+    return arg;
+  }
+
+  return '';
+}
+
+function isMutableDockerImage(image) {
+  if (!image || image.startsWith('${')) return false;
+  if (image.includes('@sha256:')) return false;
+
+  const lastSlash = image.lastIndexOf('/');
+  const lastColon = image.lastIndexOf(':');
+  if (lastColon <= lastSlash) return true;
+  return image.slice(lastColon + 1) === 'latest';
+}
+
+function collectSecretLocations(value, pathParts, locations) {
+  if (!isPlainObject(value)) return;
+
+  for (const [key, child] of Object.entries(value)) {
+    const childPath = [...pathParts, key];
+    if (typeof child === 'string') {
+      if ((mcpSecretKeyPattern.test(key) && isLiteralSecretValue(child)) || mcpSecretValuePattern.test(child)) {
+        locations.push({ key, value: child, path: childPath.join('.') });
+      }
+      continue;
+    }
+
+    collectSecretLocations(child, childPath, locations);
+  }
+}
+
+function collectSecretArgs(args, locations) {
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+
+    if (mcpSecretFlagPattern.test(arg)) {
+      const value = arg.includes('=') ? arg.slice(arg.indexOf('=') + 1) : args[index + 1] || '';
+      if (isLiteralSecretValue(value)) {
+        locations.push({ key: arg, value, path: `args.${index}` });
+      }
+      continue;
+    }
+
+    if (/^(?:Authorization|Cookie):?\s*[:=]\s*/i.test(arg) && isLiteralSecretValue(arg)) {
+      locations.push({ key: 'authorization', value: arg, path: `args.${index}` });
+    }
+  }
+}
+
+function isLiteralSecretValue(value) {
+  const trimmed = String(value || '').trim();
+  if (trimmed.length === 0) return false;
+  if (/^\$\{(?:(?:input|env):)?[\w.-]+(?::-.*)?}$/i.test(trimmed)) return false;
+  if (/^\$\{\{\s*secrets\.[\w.-]+\s*}}$/i.test(trimmed)) return false;
+  if (/^\$[A-Z_][A-Z0-9_]*$/i.test(trimmed)) return false;
+  if (mcpSecretValuePattern.test(trimmed)) return true;
+  return trimmed.length >= 8 && !/^(?:true|false|null|none|undefined)$/i.test(trimmed);
+}
+
+function redactSecretEvidence(value) {
+  const text = String(value || '');
+  if (text.length <= 6) return '[redacted]';
+  return `${text.slice(0, 3)}...[redacted]`;
+}
+
+function renderMcpCommandEvidence(server, command, args) {
+  return `MCP server "${server.name}": ${[command, ...args].filter(Boolean).join(' ')}`;
+}
+
+function locateMcpLine(context, server, needle) {
+  const needles = [needle, server.name, server.source].filter(Boolean).map(String);
+
+  for (const candidate of needles) {
+    const line = locateLine(context.lines, candidate);
+    if (line !== -1) return line;
+  }
+
+  return 1;
+}
+
+function locateLine(lines, needle) {
+  const escapedNeedle = JSON.stringify(needle).slice(1, -1);
+  const index = lines.findIndex((line) => line.includes(needle) || line.includes(escapedNeedle));
+  return index === -1 ? -1 : index + 1;
+}
+
+function stringValue(value) {
+  return typeof value === 'string' ? value : '';
+}
+
+function arrayOfStrings(value) {
+  return Array.isArray(value) ? value.filter((item) => typeof item === 'string') : [];
+}
+
+function normalizeCommand(command) {
+  return path.basename(String(command || '')).replace(/\.(?:exe|cmd|bat)$/i, '').toLowerCase();
+}
+
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function windowAround(lines, index, radius) {

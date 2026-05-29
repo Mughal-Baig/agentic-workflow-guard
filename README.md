@@ -7,9 +7,9 @@
 [![AWI risk](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Mughal-Baig/agentic-workflow-guard/main/docs/awguard-badge.json)](docs/awguard-badge.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-`agentic-workflow-guard` is a small, zero-dependency scanner for GitHub Actions workflows and persistent agent instruction files used by AI coding agents, LLMs, or automated review bots.
+`agentic-workflow-guard` is a small, zero-dependency scanner for GitHub Actions workflows, persistent agent instruction files, and MCP configs used by AI coding agents, LLMs, or automated review bots.
 
-It looks for a new class of CI/CD risk: untrusted issue, pull request, comment, or branch text flowing into an AI agent prompt, then into write-capable tools, secrets, shell scripts, or persistent instructions that weaken review boundaries.
+It looks for a new class of CI/CD risk: untrusted issue, pull request, comment, or branch text flowing into an AI agent prompt, then into write-capable tools, secrets, shell scripts, persistent instructions that weaken review boundaries, or MCP servers that expand agent authority.
 
 Its unique output is an **Agentic Workflow Injection attack graph**:
 
@@ -256,6 +256,24 @@ AWGuard also scans persistent agent instruction files:
 
 It flags instruction files that tell agents to bypass approvals, skip permission prompts, obey issue or PR text as commands, or expose secrets.
 
+## MCP Trust Boundary Guard
+
+AWGuard also scans project-scoped MCP config files without starting the configured servers:
+
+- `.mcp.json`
+- `mcp.json`
+- `.vscode/mcp.json`
+- `.cursor/mcp.json`
+- `.windsurf/mcp_config.json`
+- `.codeium/windsurf/mcp_config.json`
+- `cline_mcp_settings.json`
+- `.cline/mcp_settings.json`
+- `.roo/mcp.json`
+- `.kilocode/mcp.json`
+- `claude_desktop_config.json`
+
+It flags MCP configs that start mutable packages such as `npx package`, `uvx package@latest`, or unpinned Docker images, and configs that commit tokens, API keys, passwords, or authorization headers.
+
 ## Fix Dry Run
 
 Print remediation guidance without editing files:
@@ -293,6 +311,8 @@ If you omit rule ids, the suppression applies to all findings on the target line
 | AWG010 | Low | Third-party actions in agent workflows not pinned to a SHA |
 | AWG011 | Medium | Invalid suppression comments |
 | AWG012 | High/Critical | Agent instruction files that weaken approval, permission, or secret boundaries |
+| AWG013 | High | MCP configs that start mutable packages, unpinned containers, or shell wrappers |
+| AWG014 | Critical | MCP configs that hardcode secrets, tokens, passwords, or auth headers |
 
 ## Example Finding
 
@@ -309,6 +329,7 @@ If you omit rule ids, the suppression applies to all findings on the target line
 - Safe-output migration patch previews for common triage and review bots.
 - Hosted AWI score API for dynamic cross-repository badges.
 - Agent instruction file rule packs for Copilot, Claude Code, Codex, Gemini, Cursor, and Windsurf.
+- MCP config rule packs for Claude Code, Copilot, VS Code, Cursor, Windsurf, Cline, and Roo.
 - GitHub App integration for always-on repository monitoring.
 - Rule packs for Claude Code, Codex, Gemini, Copilot, Aider, and custom agents.
 - Public vulnerable workflow lab with attack and fix walkthroughs.

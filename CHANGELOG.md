@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.0
+
+- Add `AWG013` for project MCP configs that start mutable packages, unpinned containers, or shell wrappers.
+- Add `AWG014` for MCP configs that hardcode tokens, API keys, passwords, or authorization headers.
+- Scan `.mcp.json`, `.vscode/mcp.json`, `.cursor/mcp.json`, Windsurf, Cline, Roo, and related MCP config files without executing configured servers.
+
 ## 1.3.0
 
 - Add `AWG012` for risky persistent agent instruction files.

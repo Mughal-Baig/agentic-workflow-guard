@@ -14,6 +14,7 @@ Usage:
 
 Examples:
   awguard .
+  awguard .mcp.json
   awguard . --config awguard.config.json
   awguard . --preset strict --format graph
   awguard .github/workflows/agent.yml --format markdown --fail-on high

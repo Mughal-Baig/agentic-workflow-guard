@@ -93,14 +93,20 @@ function actionFor(result, counts) {
   const rules = new Set(result.findings.map((finding) => finding.ruleId));
 
   if (result.scannedFiles.length === 0) {
-    return 'No GitHub Actions workflows were found. Add AWGuard when agent workflows are introduced.';
+    return 'No GitHub Actions workflows, agent instruction files, or MCP configs were found. Add AWGuard when agent workflows are introduced.';
   }
 
   if (counts.critical > 0) {
+    if (rules.has('AWG014')) {
+      return 'Remove committed MCP credentials and rotate any exposed token before sharing the repository.';
+    }
     return 'Remove critical agent prompt, secret, or write-token paths before allowing autonomous agent jobs.';
   }
 
   if (counts.high > 0) {
+    if (rules.has('AWG013')) {
+      return 'Pin or remove mutable project-scoped MCP servers before allowing agents to use repository tools.';
+    }
     if (rules.has('AWG012')) {
       return 'Review persistent agent instruction files before allowing AI agents to act in CI.';
     }

@@ -7,7 +7,8 @@ export const presetCatalog = {
       AWG005: 'critical',
       AWG006: 'critical',
       AWG008: 'high',
-      AWG010: 'medium'
+      AWG010: 'medium',
+      AWG013: 'critical'
     },
     suppressions: {
       minimumReasonLength: 25
@@ -16,7 +17,8 @@ export const presetCatalog = {
   'claude-code': {
     rules: {
       AWG001: 'critical',
-      AWG006: 'critical'
+      AWG006: 'critical',
+      AWG013: 'high'
     },
     suppressions: {
       allowedRules: ['AWG001', 'AWG002', 'AWG008'],
@@ -27,7 +29,8 @@ export const presetCatalog = {
     rules: {
       AWG001: 'critical',
       AWG002: 'critical',
-      AWG006: 'high'
+      AWG006: 'high',
+      AWG013: 'high'
     },
     suppressions: {
       allowedRules: ['AWG001', 'AWG002', 'AWG008'],

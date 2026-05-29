@@ -12,7 +12,9 @@ const impactByRule = {
   AWG009: 'Untrusted artifacts can influence privileged jobs',
   AWG010: 'Mutable third-party action can change behavior',
   AWG011: 'Suppression policy can hide real risk',
-  AWG012: 'Persistent agent instructions can weaken CI guardrails'
+  AWG012: 'Persistent agent instructions can weaken CI guardrails',
+  AWG013: 'Mutable MCP tool server can change agent capabilities',
+  AWG014: 'Committed MCP credential can expose external tools or data'
 };
 
 export function buildAttackGraphs(result) {
@@ -160,11 +162,11 @@ export function renderHtmlReport(result) {
 <body>
   <header>
     <h1>Agentic Workflow Guard</h1>
-    <p class="subtitle">Attack graph report for AI-agent GitHub Actions workflows. It maps untrusted event text to prompts, agent capabilities, permissions, and possible impact.</p>
+    <p class="subtitle">Attack graph report for AI-agent workflows, instruction files, and MCP configs. It maps untrusted context and tool wiring to agent capabilities, permissions, and possible impact.</p>
   </header>
   <main>
     <section class="metrics">
-      <div class="metric"><span>Workflow files</span><strong>${result.scannedFiles.length}</strong></div>
+      <div class="metric"><span>Scanned files</span><strong>${result.scannedFiles.length}</strong></div>
       <div class="metric"><span>Findings</span><strong>${result.summary.total}</strong></div>
       <div class="metric"><span>Highest severity</span><strong>${escapeHtml(result.summary.highest)}</strong></div>
       <div class="metric"><span>Attack chains</span><strong>${attackGraph.summary.chains}</strong></div>
@@ -214,6 +216,8 @@ function inferSource(finding) {
   if (finding.ruleId === 'AWG009') return 'workflow_run artifact';
   if (finding.ruleId === 'AWG010') return 'third-party action ref';
   if (finding.ruleId === 'AWG012') return 'persistent agent instruction file';
+  if (finding.ruleId === 'AWG013') return 'project-scoped MCP server config';
+  if (finding.ruleId === 'AWG014') return 'committed MCP credential material';
   return 'workflow configuration';
 }
 
@@ -223,6 +227,7 @@ function inferBoundary(finding) {
   if (finding.ruleId === 'AWG003') return 'checkout of untrusted PR code';
   if (finding.ruleId === 'AWG007') return 'command execution sink';
   if (finding.ruleId === 'AWG012') return 'agent instruction context';
+  if (finding.ruleId === 'AWG013' || finding.ruleId === 'AWG014') return 'MCP tool boundary';
   return 'workflow execution';
 }
 
@@ -231,6 +236,8 @@ function inferCapability(finding) {
   if (finding.ruleId === 'AWG007' || finding.ruleId === 'AWG002') return 'shell command execution';
   if (finding.ruleId === 'AWG010') return 'third-party action execution';
   if (finding.ruleId === 'AWG012') return 'persistent prompt steering';
+  if (finding.ruleId === 'AWG013') return 'MCP server startup';
+  if (finding.ruleId === 'AWG014') return 'credentialed MCP tool access';
   return 'CI runner and agent tools';
 }
 
@@ -239,6 +246,8 @@ function inferAuthority(finding) {
   if (finding.ruleId === 'AWG005') return 'secret environment values';
   if (finding.ruleId === 'AWG008') return 'implicit token permissions';
   if (finding.ruleId === 'AWG012') return 'agent policy context';
+  if (finding.ruleId === 'AWG013') return 'developer machine or CI tool process';
+  if (finding.ruleId === 'AWG014') return 'MCP server secrets';
   return 'workflow permissions';
 }
 

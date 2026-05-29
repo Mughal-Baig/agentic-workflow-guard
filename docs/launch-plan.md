@@ -46,6 +46,13 @@ Short pitch:
    ```
 
 11. Explain that AWGuard scans both the workflow and the persistent agent instructions that shape agent behavior.
+12. Show an unsafe `.mcp.json` with `npx @modelcontextprotocol/server-github` and a committed token, then run:
+
+   ```bash
+   node ./bin/awguard.js examples/.mcp.json --format text
+   ```
+
+13. Explain the new hook: "This scanner checks repo-provided MCP tool wiring without executing the MCP server."
 
 ## Release Checklist
 
@@ -58,6 +65,7 @@ Short pitch:
 - Include the migration report screenshot after the graph screenshot.
 - Include the AWI risk badge as the final screenshot because it is the easiest artifact for other maintainers to copy.
 - Include a short "workflow looked safe, AGENTS.md made it unsafe" example because it is the most surprising hook.
+- Include a short "MCP config looked like developer tooling, but it gave the agent a mutable tool server and a token" example because MCP is the hottest adjacent security topic.
 
 ## Distribution Targets
 

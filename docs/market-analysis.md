@@ -172,6 +172,31 @@ Agentic Workflow Guard now supports `AWG012` to scan common instruction files fo
 
 This strengthens the project's position as an Agentic Workflow Injection guardrail instead of only another YAML scanner.
 
+## Deep Research Refresh: MCP Trust Boundary Guard
+
+The next gap is project-scoped MCP configuration. Claude Code documents `.mcp.json` as a project-root file designed to be checked into version control, VS Code documents workspace MCP config at `.vscode/mcp.json`, and GitHub Copilot documents MCP servers as additional tools for CLI agents. That means a repository can now ship the tool wiring an agent will trust, not only the workflow that starts the agent.
+
+GitHub and web research show that MCP security is popular but crowded at the live-server/tool-description layer:
+
+- `snyk/agent-scan` has roughly 2.5k GitHub stars and scans MCP servers, tools, resources, and skills, but its README warns that scanning MCP configurations executes the configured commands.
+- `cisco-ai-defense/mcp-scanner` has roughly 900+ GitHub stars and focuses on MCP server threats.
+- Other GitHub search results for `mcp scanner` are smaller server scanners, while searches for `agentic workflow injection` still show only tiny early projects.
+
+The opening for Agentic Workflow Guard is a zero-execution repository scan:
+
+```text
+checked-in MCP config -> mutable package or shell startup -> agent gains unexpected tools
+checked-in MCP config -> committed token/header -> agent gains credentialed external access
+```
+
+Agentic Workflow Guard now supports:
+
+- `AWG013` for project MCP configs that start mutable packages, `@latest` specs, unpinned containers, or shell wrappers.
+- `AWG014` for committed tokens, API keys, passwords, bearer headers, and other MCP auth material.
+- Discovery for `.mcp.json`, `.vscode/mcp.json`, `.cursor/mcp.json`, Windsurf, Cline, Roo, and related MCP config files.
+
+This keeps the project focused: AWGuard does not try to replace MCP runtime scanners. It gives maintainers a GitHub-native, zero-dependency first check before an agent or scanner executes repo-provided MCP server commands.
+
 ## Distribution Plan
 
 1. Publish the repo with a short demo GIF or screenshot.
@@ -189,6 +214,13 @@ This strengthens the project's position as an Agentic Workflow Injection guardra
 - GitHub Actions secure use reference: https://docs.github.com/en/enterprise-cloud@latest/actions/reference/security/secure-use
 - GitHub Agentic Workflows security architecture: https://github.github.com/gh-aw/
 - GitHub Copilot repository custom instructions: https://docs.github.com/en/copilot/how-tos/custom-instructions/adding-repository-custom-instructions-for-github-copilot
+- GitHub Copilot CLI MCP command reference: https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference#mcp-server-configuration
+- GitHub Copilot MCP in VS Code: https://docs.github.com/en/copilot/how-tos/provide-context/use-mcp-in-your-ide/extend-copilot-chat-with-mcp
+- VS Code MCP configuration reference: https://code.visualstudio.com/docs/copilot/reference/mcp-configuration
+- Claude Code MCP documentation: https://code.claude.com/docs/en/mcp
+- Snyk Agent Scan / MCP Scan: https://github.com/snyk/agent-scan
+- Cisco AI Defense MCP Scanner: https://github.com/cisco-ai-defense/mcp-scanner
+- MCP threat modeling and tool poisoning research: https://arxiv.org/abs/2603.22489
 - OpenAI Codex AGENTS.md documentation: https://github.com/openai/codex/blob/main/docs/agents_md.md
 - AGENTS.md project: https://github.com/openai/agents.md
 - Claude Code permission modes: https://code.claude.com/docs/en/permission-modes

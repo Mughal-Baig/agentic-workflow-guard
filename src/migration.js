@@ -53,6 +53,16 @@ const ruleActions = {
     'Remove persistent instructions that tell agents to bypass approvals, confirmations, or permission checks.',
     'Tell agents to treat issue, PR, comment, branch, and artifact text as untrusted data instead of commands.',
     'Keep AGENTS.md, CLAUDE.md, GEMINI.md, Copilot instructions, and Cursor rules aligned with the workflow permission model.'
+  ],
+  AWG013: [
+    'Pin project-scoped MCP server packages to exact versions or container digests.',
+    'Replace shell-wrapper MCP startup commands with direct executable and argument arrays.',
+    'Review MCP server packages before letting agents use them in CI or shared developer workspaces.'
+  ],
+  AWG014: [
+    'Remove committed MCP tokens, API keys, passwords, and auth headers.',
+    'Use prompted inputs, environment variables, or managed secrets for MCP credentials.',
+    'Rotate credentials that were present in repository history.'
   ]
 };
 
@@ -139,8 +149,9 @@ export function renderMigrationPlan(result) {
     lines.push('');
     lines.push('Reference pattern:');
     lines.push('');
-    lines.push('```yaml');
-    lines.push(renderReferencePattern(filePlan));
+    const referencePattern = renderReferencePattern(filePlan);
+    lines.push(`\`\`\`${referencePattern.language}`);
+    lines.push(referencePattern.text);
     lines.push('```');
     lines.push('');
   }
@@ -167,6 +178,8 @@ function riskShapeFor(findings) {
   if (rules.has('AWG005')) pieces.push('secrets are in scope');
   if (rules.has('AWG010')) pieces.push('agent workflow depends on mutable third-party code');
   if (rules.has('AWG012')) pieces.push('persistent agent instructions weaken review or permission boundaries');
+  if (rules.has('AWG013')) pieces.push('project MCP config can change agent tool capabilities through mutable startup');
+  if (rules.has('AWG014')) pieces.push('project MCP config contains committed credentials');
 
   return pieces.length > 0 ? pieces.join('; ') : 'workflow hardening issue';
 }
@@ -209,15 +222,45 @@ function allowedOperationsFor(findings) {
     operations.add('instruction-file update that explicitly treats GitHub event text as untrusted data');
   }
 
+  if (rules.has('AWG013')) {
+    operations.add('MCP server startup only from pinned packages, reviewed local paths, or container digests');
+  }
+
+  if (rules.has('AWG014')) {
+    operations.add('MCP credentials supplied by prompt input, environment variable, or secret manager only');
+  }
+
   operations.add('noop or missing-data report when validation fails');
   return [...operations];
 }
 
 function renderReferencePattern(filePlan) {
+  if (filePlan.findings.every((finding) => ['AWG013', 'AWG014'].includes(finding.ruleId))) {
+    return {
+      language: 'json',
+      text: `{
+  "inputs": [{ "type": "promptString", "id": "github-token", "password": true }],
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github@1.2.3"],
+      "env": { "GITHUB_TOKEN": "\${input:github-token}" }
+    },
+    "browser": {
+      "command": "docker",
+      "args": ["run", "--rm", "example/mcp-browser@sha256:..."]
+    }
+  }
+}`
+    };
+  }
+
   const needsApproval = filePlan.findings.some((finding) => writeRules.has(finding.ruleId));
   const applyGate = needsApproval ? "if: github.event_name == 'workflow_dispatch'" : 'if: always()';
 
-  return `permissions:
+  return {
+    language: 'yaml',
+    text: `permissions:
   contents: read
 
 jobs:
@@ -249,7 +292,8 @@ jobs:
       - name: Validate structured proposal before applying
         run: |
           ./scripts/validate-agent-proposal.js proposal.json
-          ./scripts/apply-allowed-github-operation.js proposal.json`;
+          ./scripts/apply-allowed-github-operation.js proposal.json`
+  };
 }
 
 function groupBy(values, keyFn) {
