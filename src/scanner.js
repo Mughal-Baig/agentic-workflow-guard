@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { findingFingerprint } from './fingerprints.js';
 
 export const severityRank = {
   none: 0,
@@ -353,7 +354,7 @@ function addFinding(context, ruleId, line, overrides = {}) {
   if (context.seen.has(key)) return;
   context.seen.add(key);
 
-  context.findings.push({
+  const finding = {
     ruleId,
     title: docs.title,
     severity: overrides.severity || docs.severity,
@@ -363,6 +364,12 @@ function addFinding(context, ruleId, line, overrides = {}) {
     message: overrides.message || docs.title,
     evidence: overrides.evidence || '',
     suggestion: overrides.suggestion || docs.suggestion
+  };
+
+  context.findings.push({
+    ...finding,
+    fingerprint: findingFingerprint(finding),
+    baselineState: 'new'
   });
 }
 

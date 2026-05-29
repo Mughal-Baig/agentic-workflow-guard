@@ -1,6 +1,6 @@
 {
   "name": "agentic-workflow-guard",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Scan GitHub Actions workflows for AI-agent injection, unsafe permissions, and untrusted prompt flows.",
   "type": "module",
   "bin": {
@@ -24,6 +24,7 @@
   },
   "files": [
     "action.yml",
+    "CHANGELOG.md",
     "bin",
     "src",
     "docs",

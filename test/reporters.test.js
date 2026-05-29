@@ -29,4 +29,5 @@ jobs:
   assert.equal(sarif.runs[0].results[0].ruleId, 'AWG001');
   assert.equal(sarif.runs[0].results[0].locations[0].physicalLocation.artifactLocation.uri, 'agent.yml');
   assert.ok(sarif.runs[0].results[0].partialFingerprints.primaryLocationLineHash);
+  assert.ok(sarif.runs[0].results[0].properties.baselineState);
 });

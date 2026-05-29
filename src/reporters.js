@@ -1,5 +1,5 @@
 import path from 'node:path';
-import crypto from 'node:crypto';
+import { findingFingerprint } from './fingerprints.js';
 import { ruleCatalog } from './scanner.js';
 
 const sarifSeverity = {
@@ -24,10 +24,15 @@ export function renderText(result) {
     `Findings: ${result.summary.total} total, highest severity: ${result.summary.highest}.`
   ];
 
+  if (result.summary.baseline) {
+    header.push(`Baseline: ${result.summary.baseline.new} new, ${result.summary.baseline.known} known.`);
+  }
+
   const body = result.findings.map((finding) => {
+    const baselineSuffix = finding.baselineState === 'known' ? ' [baseline]' : '';
     return [
       '',
-      `[${finding.severity.toUpperCase()}] ${finding.ruleId} ${finding.title}`,
+      `[${finding.severity.toUpperCase()}]${baselineSuffix} ${finding.ruleId} ${finding.title}`,
       `  ${finding.file}:${finding.line}`,
       `  ${finding.message}`,
       finding.evidence ? `  Evidence: ${finding.evidence}` : '',
@@ -54,7 +59,9 @@ export function renderJson(result) {
         line: finding.line,
         message: finding.message,
         evidence: finding.evidence,
-        suggestion: finding.suggestion
+        suggestion: finding.suggestion,
+        fingerprint: finding.fingerprint,
+        baselineState: finding.baselineState
       }))
     },
     null,
@@ -73,7 +80,7 @@ export function renderSarif(result) {
             driver: {
               name: 'Agentic Workflow Guard',
               informationUri: 'https://github.com/Mughal-Baig/agentic-workflow-guard',
-              semanticVersion: '0.1.0',
+              semanticVersion: '0.2.0',
               rules: Object.entries(ruleCatalog).map(([id, rule]) => ({
                 id,
                 name: id,
@@ -117,10 +124,11 @@ export function renderSarif(result) {
               }
             ],
             partialFingerprints: {
-              primaryLocationLineHash: stableFingerprint(finding)
+              primaryLocationLineHash: finding.fingerprint || findingFingerprint(finding)
             },
             properties: {
               severity: finding.severity,
+              baselineState: finding.baselineState,
               evidence: finding.evidence
             }
           }))
@@ -202,14 +210,6 @@ function escapeProperty(value) {
 
 function escapeData(value) {
   return String(value).replaceAll('%', '%25').replaceAll('\r', '%0D').replaceAll('\n', '%0A');
-}
-
-function stableFingerprint(finding) {
-  return crypto
-    .createHash('sha256')
-    .update([finding.ruleId, finding.file, finding.line, finding.evidence].join('\0'))
-    .digest('hex')
-    .slice(0, 32);
 }
 
 function toSarifUri(file) {

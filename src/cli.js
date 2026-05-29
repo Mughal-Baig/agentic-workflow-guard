@@ -1,18 +1,21 @@
 import process from 'node:process';
 import fs from 'node:fs';
 import path from 'node:path';
+import { applyBaseline, createBaseline, loadBaseline, writeBaseline } from './baseline.js';
 import { scanWorkflows, severityRank } from './scanner.js';
 import { renderGithubAnnotations, renderJson, renderMarkdown, renderSarif, renderText } from './reporters.js';
 
 const HELP = `Agentic Workflow Guard
 
 Usage:
-  awguard [path] [--format text|json|markdown|github|sarif] [--output file] [--fail-on none|low|medium|high|critical]
+  awguard [path] [--format text|json|markdown|github|sarif] [--output file] [--baseline file] [--write-baseline file] [--fail-on none|low|medium|high|critical]
 
 Examples:
   awguard .
   awguard .github/workflows/agent.yml --format markdown --fail-on high
   awguard . --format sarif --output awguard.sarif --fail-on none
+  awguard . --write-baseline awguard.baseline.json
+  awguard . --baseline awguard.baseline.json --fail-on high
   awguard . --format github --fail-on medium
 `;
 
@@ -24,7 +27,17 @@ export async function runCli(args, env = process.env) {
     return;
   }
 
-  const result = scanWorkflows({ root: options.path });
+  let result = scanWorkflows({ root: options.path });
+
+  if (options.baseline) {
+    result = applyBaseline(result, loadBaseline(options.baseline));
+  }
+
+  if (options.writeBaseline) {
+    const baselineFile = writeBaseline(options.writeBaseline, createBaseline(result));
+    console.error(`Wrote baseline ${baselineFile}`);
+  }
+
   const output = render(result, options.format);
 
   if (options.output) {
@@ -34,7 +47,8 @@ export async function runCli(args, env = process.env) {
     console.log(output);
   }
 
-  if (shouldFail(result.findings, options.failOn)) {
+  const findingsToFailOn = result.findings.filter((finding) => finding.baselineState !== 'known');
+  if (shouldFail(findingsToFailOn, options.failOn)) {
     process.exitCode = 1;
   }
 }
@@ -46,6 +60,8 @@ export function parseArgs(args, env = {}) {
     format: readInput(env, 'format') || (isAction ? 'github' : 'text'),
     failOn: readInput(env, 'fail_on') || readInput(env, 'fail-on') || (isAction ? 'high' : 'none'),
     output: readInput(env, 'output') || '',
+    baseline: readInput(env, 'baseline') || '',
+    writeBaseline: readInput(env, 'write_baseline') || readInput(env, 'write-baseline') || '',
     help: false
   };
 
@@ -66,6 +82,14 @@ export function parseArgs(args, env = {}) {
       options.output = args[++index];
     } else if (arg.startsWith('--output=')) {
       options.output = arg.slice('--output='.length);
+    } else if (arg === '--baseline') {
+      options.baseline = args[++index];
+    } else if (arg.startsWith('--baseline=')) {
+      options.baseline = arg.slice('--baseline='.length);
+    } else if (arg === '--write-baseline') {
+      options.writeBaseline = args[++index];
+    } else if (arg.startsWith('--write-baseline=')) {
+      options.writeBaseline = arg.slice('--write-baseline='.length);
     } else if (!arg.startsWith('-')) {
       options.path = arg;
     } else {

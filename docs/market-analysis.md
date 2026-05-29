@@ -52,6 +52,19 @@ This makes the project more valuable to maintainers because:
 - It allows future severity, fingerprint, and suppression workflows.
 - It positions the tool next to existing static analyzers instead of as a one-off script.
 
+## Third-Pass Improvement: Baselines
+
+The next strongest adoption feature is baseline mode. Mature scanners invest heavily in triage, ignore states, deduplication, and separating new findings from known findings because teams rarely enable a new security gate if it immediately blocks work on historical issues.
+
+Agentic Workflow Guard now supports:
+
+- `--write-baseline awguard.baseline.json` to record current findings.
+- `--baseline awguard.baseline.json` to mark matching findings as known.
+- CI failure based only on findings that are not already in the baseline.
+- Stable fingerprints based on rule, file, and normalized evidence.
+
+This improves public reach because a maintainer can add the tool to a real repository with risk already present, keep visibility into the existing risk, and still block new high-severity agent-workflow mistakes.
+
 ## Distribution Plan
 
 1. Publish the repo with a short demo GIF or screenshot.

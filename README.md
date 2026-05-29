@@ -44,8 +44,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: YOUR_GITHUB_USERNAME/agentic-workflow-guard@v0
+      - uses: Mughal-Baig/agentic-workflow-guard@v0
         with:
+          fail-on: high
+```
+
+To adopt the scanner without breaking CI on old findings, commit a baseline file and use:
+
+```yaml
+      - uses: Mughal-Baig/agentic-workflow-guard@v0
+        with:
+          baseline: awguard.baseline.json
           fail-on: high
 ```
 
@@ -71,7 +80,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: YOUR_GITHUB_USERNAME/agentic-workflow-guard@v0
+      - uses: Mughal-Baig/agentic-workflow-guard@v0
         with:
           format: sarif
           output: awguard.sarif
@@ -85,7 +94,7 @@ jobs:
 ## CLI
 
 ```bash
-awguard [path] [--format text|json|markdown|github|sarif] [--output file] [--fail-on none|low|medium|high|critical]
+awguard [path] [--format text|json|markdown|github|sarif] [--output file] [--baseline file] [--write-baseline file] [--fail-on none|low|medium|high|critical]
 ```
 
 Examples:
@@ -94,8 +103,28 @@ Examples:
 node ./bin/awguard.js examples/unsafe-agent.yml
 node ./bin/awguard.js . --format markdown --fail-on medium
 node ./bin/awguard.js . --format sarif --output awguard.sarif --fail-on none
+node ./bin/awguard.js . --write-baseline awguard.baseline.json
+node ./bin/awguard.js . --baseline awguard.baseline.json --fail-on high
 node ./bin/awguard.js . --format github --fail-on high
 ```
+
+## Baseline Mode
+
+Baseline mode lets a project start using the scanner without failing CI for already-known issues.
+
+Create a baseline:
+
+```bash
+node ./bin/awguard.js . --write-baseline awguard.baseline.json --fail-on none
+```
+
+Then fail only on findings that are not in the baseline:
+
+```bash
+node ./bin/awguard.js . --baseline awguard.baseline.json --fail-on high
+```
+
+The baseline stores stable finding fingerprints, not secrets or workflow contents.
 
 ## What It Detects
 
@@ -123,7 +152,7 @@ node ./bin/awguard.js . --format github --fail-on high
 
 ## Roadmap
 
-- Baseline mode so teams can fail only on new findings.
+- Inline suppression comments with required justification text.
 - Autofix suggestions for `permissions` and safe env-variable patterns.
 - Rule packs for Claude Code, Codex, Gemini, Copilot, Aider, and custom agents.
 - Optional taint graph output for security reviews.

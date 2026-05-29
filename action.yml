@@ -18,6 +18,14 @@ inputs:
     description: Optional file path for json, markdown, or sarif output.
     required: false
     default: ''
+  baseline:
+    description: Optional Agentic Workflow Guard baseline file. Matching findings are treated as known and do not fail the check.
+    required: false
+    default: ''
+  write-baseline:
+    description: Optional path to write a baseline file for the current scan.
+    required: false
+    default: ''
 runs:
   using: node20
   main: bin/awguard.js
