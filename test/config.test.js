@@ -131,7 +131,7 @@ jobs:
 `
   );
 
-  const result = spawnSync(process.execPath, [bin, root, '--fail-on', 'low'], {
+  const result = spawnSync(process.execPath, [bin, root, '--format', 'text', '--fail-on', 'low'], {
     encoding: 'utf8'
   });
 

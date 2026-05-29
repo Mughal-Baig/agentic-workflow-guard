@@ -47,15 +47,23 @@ jobs:
 `
   );
 
-  const write = spawnSync(process.execPath, [bin, workflowFile, '--write-baseline', baselineFile, '--fail-on', 'none'], {
-    encoding: 'utf8'
-  });
+  const write = spawnSync(
+    process.execPath,
+    [bin, workflowFile, '--write-baseline', baselineFile, '--format', 'text', '--fail-on', 'none'],
+    {
+      encoding: 'utf8'
+    }
+  );
   assert.equal(write.status, 0, write.stderr);
   assert.equal(fs.existsSync(baselineFile), true);
 
-  const known = spawnSync(process.execPath, [bin, workflowFile, '--baseline', baselineFile, '--fail-on', 'high'], {
-    encoding: 'utf8'
-  });
+  const known = spawnSync(
+    process.execPath,
+    [bin, workflowFile, '--baseline', baselineFile, '--format', 'text', '--fail-on', 'high'],
+    {
+      encoding: 'utf8'
+    }
+  );
   assert.equal(known.status, 0, known.stderr);
   assert.match(known.stdout, /Baseline: 0 new, \d+ known/);
 
@@ -71,9 +79,13 @@ jobs:
 `
   );
 
-  const newer = spawnSync(process.execPath, [bin, workflowFile, '--baseline', baselineFile, '--fail-on', 'high'], {
-    encoding: 'utf8'
-  });
+  const newer = spawnSync(
+    process.execPath,
+    [bin, workflowFile, '--baseline', baselineFile, '--format', 'text', '--fail-on', 'high'],
+    {
+      encoding: 'utf8'
+    }
+  );
   assert.equal(newer.status, 1);
   assert.match(newer.stdout, /Baseline: \d+ new, \d+ known/);
 });
