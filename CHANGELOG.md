@@ -3,6 +3,9 @@
 ## Unreleased
 
 - Add `awguard doctor` for setup, config, scan target, schema, and GitHub Actions summary checks.
+- Add `awguard explain AWG###` for rule-level explanations and remediation guidance.
+- Add `awguard badges` to print copyable README badge snippets.
+- Add `awguard demo` for an offline unsafe-to-fixed vulnerable lab walkthrough.
 - Add `schemas/awguard.config.schema.json` for editor validation of AWGuard config files.
 - Add automatic GitHub Actions job summaries with scan metrics and top findings.
 

@@ -2,6 +2,12 @@
 
 This lab gives maintainers a tiny before/after set for demos, screenshots, and testing.
 
+Run the full built-in walkthrough:
+
+```bash
+npx awguard@latest demo
+```
+
 ## Unsafe
 
 ```bash

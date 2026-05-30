@@ -2,9 +2,12 @@ import process from 'node:process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { applyBaseline, createBaseline, loadBaseline, writeBaseline } from './baseline.js';
+import { renderBadgeSnippets } from './badges.js';
 import { loadReport, renderComparison } from './compare.js';
+import { renderDemoWalkthrough } from './demo.js';
 import { loadConfig } from './config.js';
 import { buildDoctorReport, renderDoctorReport } from './doctor.js';
+import { renderRuleExplanation } from './explain.js';
 import { renderInitGuide } from './init.js';
 import { renderFixDryRun } from './remediation.js';
 import { scanWorkflows, severityRank } from './scanner.js';
@@ -30,11 +33,17 @@ Usage:
   awguard [path] [--config file] [--preset name] [--format text|json|markdown|github|sarif|graph|html|migration|score|badge|inventory|inventory-json] [--output file] [--baseline file] [--write-baseline file] [--fix-dry-run] [--fail-on none|low|medium|high|critical]
   awguard init
   awguard doctor [path] [--config file] [--preset name]
+  awguard explain [AWG###]
+  awguard badges [--repo OWNER/REPO] [--branch main] [--badge-file docs/awguard-badge.json] [--site URL]
+  awguard demo
   awguard --compare previous.json current.json
 
 Examples:
   awguard init
   awguard doctor
+  awguard explain AWG001
+  awguard badges --repo OWNER/REPO --site https://OWNER.github.io/REPO/
+  awguard demo
   awguard .
   awguard .mcp.json
   awguard . --config awguard.config.json
@@ -70,6 +79,21 @@ export async function runCli(args, env = process.env) {
     });
     console.log(renderDoctorReport(report));
     if (report.status === 'fail') process.exitCode = 1;
+    return;
+  }
+
+  if (args[0] === 'explain') {
+    console.log(renderRuleExplanation(args[1]));
+    return;
+  }
+
+  if (args[0] === 'badges') {
+    console.log(renderBadgeSnippets(parseBadgeArgs(args.slice(1))));
+    return;
+  }
+
+  if (args[0] === 'demo') {
+    console.log(renderDemoWalkthrough());
     return;
   }
 
@@ -235,6 +259,33 @@ function splitList(value) {
 function readBoolInput(env, name) {
   const value = readInput(env, name);
   return value === 'true' || value === '1' || value === 'yes';
+}
+
+function parseBadgeArgs(args) {
+  const options = {};
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === '--repo') {
+      options.repo = args[++index];
+    } else if (arg.startsWith('--repo=')) {
+      options.repo = arg.slice('--repo='.length);
+    } else if (arg === '--branch') {
+      options.branch = args[++index];
+    } else if (arg.startsWith('--branch=')) {
+      options.branch = arg.slice('--branch='.length);
+    } else if (arg === '--badge-file') {
+      options.badgeFile = args[++index];
+    } else if (arg.startsWith('--badge-file=')) {
+      options.badgeFile = arg.slice('--badge-file='.length);
+    } else if (arg === '--site') {
+      options.site = args[++index];
+    } else if (arg.startsWith('--site=')) {
+      options.site = arg.slice('--site='.length);
+    } else {
+      throw new Error(`unknown badges option: ${arg}`);
+    }
+  }
+  return options;
 }
 
 function writeOutput(file, output) {

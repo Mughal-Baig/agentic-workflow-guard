@@ -57,6 +57,14 @@ Check your local setup, config discovery, scan target, and GitHub Actions summar
 npx awguard doctor
 ```
 
+Explain a rule, print README badge snippets, or run the built-in vulnerable lab demo:
+
+```bash
+npx awguard explain AWG001
+npx awguard badges --repo OWNER/REPO --site https://OWNER.github.io/REPO/
+npx awguard demo
+```
+
 ## Use In GitHub Actions
 
 After you upload this repository to GitHub, users can add:
@@ -133,6 +141,9 @@ jobs:
 awguard [path] [--config file] [--preset name] [--format text|json|markdown|github|sarif|graph|html|migration|score|badge|inventory|inventory-json] [--output file] [--baseline file] [--write-baseline file] [--fix-dry-run] [--fail-on none|low|medium|high|critical]
 awguard init
 awguard doctor [path] [--config file] [--preset name]
+awguard explain [AWG###]
+awguard badges [--repo OWNER/REPO] [--branch main] [--badge-file docs/awguard-badge.json] [--site URL]
+awguard demo
 awguard --compare previous.json current.json
 ```
 
@@ -140,6 +151,9 @@ Examples:
 
 ```bash
 node ./bin/awguard.js doctor
+node ./bin/awguard.js explain AWG013
+node ./bin/awguard.js badges --repo Mughal-Baig/agentic-workflow-guard --site https://mughal-baig.github.io/agentic-workflow-guard/
+node ./bin/awguard.js demo
 node ./bin/awguard.js examples/unsafe-agent.yml
 node ./bin/awguard.js . --config awguard.config.json
 node ./bin/awguard.js . --preset strict --format graph
@@ -265,6 +279,12 @@ Then add a badge to your README:
 [![AWI risk](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/OWNER/REPO/main/docs/awguard-badge.json)](docs/awguard-badge.json)
 ```
 
+Or print all common badge snippets:
+
+```bash
+node ./bin/awguard.js badges --repo OWNER/REPO
+```
+
 The score starts at 100 and subtracts risk for critical, high, medium, and low findings. This makes AWGuard easy to show in a README without hiding the detailed SARIF, graph, and migration reports.
 
 ## Agentic Surface Inventory
@@ -353,6 +373,20 @@ Print remediation guidance without editing files:
 
 ```bash
 node ./bin/awguard.js examples/unsafe-agent.yml --fix-dry-run
+```
+
+## Explain And Demo
+
+Explain any rule:
+
+```bash
+node ./bin/awguard.js explain AWG004
+```
+
+Run the built-in unsafe-to-fixed lab walkthrough without network access:
+
+```bash
+node ./bin/awguard.js demo
 ```
 
 ## Inline Suppressions

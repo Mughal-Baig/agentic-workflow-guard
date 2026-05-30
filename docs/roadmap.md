@@ -58,6 +58,9 @@ Current research points:
 - Shipped `--format inventory-json`.
 - Shipped `awguard init`.
 - Shipped `awguard doctor`.
+- Shipped `awguard explain`.
+- Shipped `awguard badges`.
+- Shipped `awguard demo`.
 - Shipped `awguard.config.json` schema support.
 - Shipped GitHub Actions job summaries.
 - Shipped `--compare previous.json current.json`.
