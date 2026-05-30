@@ -15,7 +15,7 @@ jobs:
   agentic-workflow-guard:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Generate SARIF
         run: node ./bin/awguard.js . --format sarif --output awguard.sarif --fail-on none
       - name: Upload SARIF

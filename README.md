@@ -83,7 +83,7 @@ jobs:
   scan-agent-workflows:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: Mughal-Baig/agentic-workflow-guard@v0
         with:
           config: awguard.config.json
@@ -123,7 +123,7 @@ jobs:
   scan:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: Mughal-Baig/agentic-workflow-guard@v0
         with:
           format: sarif

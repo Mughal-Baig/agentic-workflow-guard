@@ -21,7 +21,7 @@ export function renderInitGuide({ actionRef = 'v0' } = {}) {
     '  scan:',
     '    runs-on: ubuntu-latest',
     '    steps:',
-    '      - uses: actions/checkout@v4',
+    '      - uses: actions/checkout@v6',
     `      - uses: Mughal-Baig/agentic-workflow-guard@${actionRef}`,
     '        with:',
     '          preset: strict',
