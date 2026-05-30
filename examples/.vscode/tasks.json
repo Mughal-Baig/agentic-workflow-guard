@@ -1,0 +1,17 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "awguard inventory",
+      "type": "shell",
+      "command": "npx awguard@latest . --format inventory",
+      "problemMatcher": []
+    },
+    {
+      "label": "awguard scan",
+      "type": "shell",
+      "command": "npx awguard@latest . --fail-on high",
+      "problemMatcher": []
+    }
+  ]
+}

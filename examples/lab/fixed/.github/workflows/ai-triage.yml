@@ -1,0 +1,20 @@
+name: Safer AI triage
+
+on:
+  issue_comment:
+
+permissions:
+  contents: read
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Capture comment as untrusted data
+        env:
+          USER_TEXT: ${{ github.event.comment.body }} # awguard-disable-line AWG001 -- Reviewed: captured as data and used only in read-only suggestion mode.
+        run: |
+          printf '%s\n' "$USER_TEXT" > untrusted-input.txt
+      - name: Ask agent for suggestion only
+        run: |
+          codex --approval-mode suggest --prompt-file untrusted-input.txt

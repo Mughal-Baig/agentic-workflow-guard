@@ -175,6 +175,12 @@ export const ruleCatalog = {
     severity: 'critical',
     suggestion:
       'Move MCP credentials into input prompts, environment variables, or a secret manager. Do not commit bearer tokens, API keys, passwords, or auth headers in MCP config files.'
+  },
+  AWG015: {
+    title: 'Agentic surface is not approved by policy',
+    severity: 'medium',
+    suggestion:
+      'Add the workflow, agent context file, MCP config, MCP server, package, or command to the policy allowlist only after review. Otherwise remove or harden it.'
   }
 };
 
@@ -315,13 +321,15 @@ export function classifyScanFile(file, root = process.cwd()) {
 
 function scanFile(file, root, config) {
   const text = fs.readFileSync(file, 'utf8');
+  let findings;
   if (isAgentInstructionFile(file, root)) {
-    return scanAgentInstructionText(text, file, root, config);
+    findings = scanAgentInstructionText(text, file, root, config);
+  } else if (isMcpConfigFile(file, root)) {
+    findings = scanMcpConfigText(text, file, root, config);
+  } else {
+    findings = scanWorkflowText(text, file, root, config);
   }
-  if (isMcpConfigFile(file, root)) {
-    return scanMcpConfigText(text, file, root, config);
-  }
-  return scanWorkflowText(text, file, root, config);
+  return [...findings, ...detectFilePolicy(file, root, config)];
 }
 
 function discoverScanFiles(root) {
@@ -553,6 +561,7 @@ function detectMcpConfigRisks(context, config) {
   for (const server of servers) {
     detectMutableMcpServer(context, server);
     detectMcpSecretMaterial(context, server);
+    detectMcpPolicy(context, server);
   }
 }
 
@@ -608,6 +617,71 @@ function detectMcpSecretMaterial(context, server) {
       message: `MCP server "${server.name}" appears to hardcode secret or authorization material.`
     });
   }
+}
+
+function detectMcpPolicy(context, server) {
+  const policy = context.config.policy || {};
+  const command = normalizeCommand(stringValue(server.config.command));
+  const args = arrayOfStrings(server.config.args);
+  const packageSpec = findMcpPackageSpec(command, args);
+
+  if (policy.approvedMcpServers?.length > 0 && !policy.approvedMcpServers.includes(server.name)) {
+    addFinding(context, 'AWG015', locateMcpLine(context, server, server.name), {
+      evidence: `MCP server "${server.name}"`,
+      message: `MCP server "${server.name}" is not listed in policy.approvedMcpServers.`
+    });
+  }
+
+  if (policy.approvedMcpCommands?.length > 0 && command && !policy.approvedMcpCommands.includes(command)) {
+    addFinding(context, 'AWG015', locateMcpLine(context, server, command), {
+      evidence: `MCP server "${server.name}" command: ${command}`,
+      message: `MCP server "${server.name}" uses a command not listed in policy.approvedMcpCommands.`
+    });
+  }
+
+  if (policy.approvedMcpPackages?.length > 0 && packageSpec && !policy.approvedMcpPackages.includes(packageSpec)) {
+    addFinding(context, 'AWG015', locateMcpLine(context, server, packageSpec), {
+      evidence: `MCP server "${server.name}" package: ${packageSpec}`,
+      message: `MCP server "${server.name}" uses a package not listed in policy.approvedMcpPackages.`
+    });
+  }
+}
+
+function detectFilePolicy(file, root, config) {
+  const policy = config.policy || {};
+  if (!policy.approvedFiles || policy.approvedFiles.length === 0) return [];
+
+  const relativeFile = path.relative(root, file).split(path.sep).join('/') || path.basename(file);
+  if (matchesAnyPolicyPattern(relativeFile, policy.approvedFiles)) return [];
+
+  const context = createPolicyContext(file, root, config);
+  addFinding(context, 'AWG015', 1, {
+    evidence: relativeFile,
+    message: `${relativeFile} is an agentic surface that is not listed in policy.approvedFiles.`
+  });
+  return context.findings;
+}
+
+function createPolicyContext(file, root, config) {
+  return {
+    file,
+    relativeFile: path.isAbsolute(file) ? path.relative(root, file) || path.basename(file) : file,
+    lines: [],
+    runBlocks: new Set(),
+    triggers: new Set(),
+    hasAgent: true,
+    hasPromptBoundary: true,
+    hasUntrustedTrigger: false,
+    hasPermissionBlock: false,
+    hasBroadPermission: false,
+    hasSecret: false,
+    config,
+    suppressions: new Map(),
+    invalidSuppressions: [],
+    suppressedFindings: [],
+    findings: [],
+    seen: new Set()
+  };
 }
 
 function addFinding(context, ruleId, line, overrides = {}) {
@@ -1205,6 +1279,18 @@ function normalizeCommand(command) {
 
 function isPlainObject(value) {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function matchesAnyPolicyPattern(value, patterns) {
+  return patterns.some((pattern) => wildcardToRegExp(pattern).test(value));
+}
+
+function wildcardToRegExp(pattern) {
+  const escaped = String(pattern)
+    .split('*')
+    .map((part) => escapeRegex(part))
+    .join('.*');
+  return new RegExp(`^${escaped}$`);
 }
 
 function windowAround(lines, index, radius) {

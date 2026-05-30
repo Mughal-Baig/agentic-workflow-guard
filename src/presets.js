@@ -8,7 +8,8 @@ export const presetCatalog = {
       AWG006: 'critical',
       AWG008: 'high',
       AWG010: 'medium',
-      AWG013: 'critical'
+      AWG013: 'critical',
+      AWG015: 'high'
     },
     suppressions: {
       minimumReasonLength: 25

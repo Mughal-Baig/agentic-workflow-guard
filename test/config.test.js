@@ -53,6 +53,34 @@ test('normalizes named presets and explicit overrides', () => {
   assert.equal(config.suppressions.minimumReasonLength, 30);
 });
 
+test('normalizes policy allowlists', () => {
+  const config = normalizeConfig({
+    policy: {
+      approvedFiles: ['AGENTS.md', '.github/workflows/*'],
+      approvedMcpServers: ['github'],
+      approvedMcpPackages: ['@modelcontextprotocol/server-github@1.2.3'],
+      approvedMcpCommands: ['npx']
+    }
+  });
+
+  assert.deepEqual(config.policy.approvedFiles, ['AGENTS.md', '.github/workflows/*']);
+  assert.deepEqual(config.policy.approvedMcpServers, ['github']);
+  assert.deepEqual(config.policy.approvedMcpPackages, ['@modelcontextprotocol/server-github@1.2.3']);
+  assert.deepEqual(config.policy.approvedMcpCommands, ['npx']);
+});
+
+test('rejects malformed policy allowlists', () => {
+  assert.throws(
+    () =>
+      normalizeConfig({
+        policy: {
+          approvedFiles: 'AGENTS.md'
+        }
+      }),
+    /policy.approvedFiles must be an array/
+  );
+});
+
 test('scanner applies disabled rules and severity overrides', () => {
   const workflow = `
 on: [workflow_dispatch]

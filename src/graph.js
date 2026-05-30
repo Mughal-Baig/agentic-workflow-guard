@@ -14,7 +14,8 @@ const impactByRule = {
   AWG011: 'Suppression policy can hide real risk',
   AWG012: 'Persistent agent instructions can weaken CI guardrails',
   AWG013: 'Mutable MCP tool server can change agent capabilities',
-  AWG014: 'Committed MCP credential can expose external tools or data'
+  AWG014: 'Committed MCP credential can expose external tools or data',
+  AWG015: 'Unapproved agentic surface can drift outside policy'
 };
 
 export function buildAttackGraphs(result) {
@@ -218,6 +219,7 @@ function inferSource(finding) {
   if (finding.ruleId === 'AWG012') return 'persistent agent instruction file';
   if (finding.ruleId === 'AWG013') return 'project-scoped MCP server config';
   if (finding.ruleId === 'AWG014') return 'committed MCP credential material';
+  if (finding.ruleId === 'AWG015') return 'repository policy';
   return 'workflow configuration';
 }
 
@@ -228,6 +230,7 @@ function inferBoundary(finding) {
   if (finding.ruleId === 'AWG007') return 'command execution sink';
   if (finding.ruleId === 'AWG012') return 'agent instruction context';
   if (finding.ruleId === 'AWG013' || finding.ruleId === 'AWG014') return 'MCP tool boundary';
+  if (finding.ruleId === 'AWG015') return 'policy allowlist boundary';
   return 'workflow execution';
 }
 
@@ -238,6 +241,7 @@ function inferCapability(finding) {
   if (finding.ruleId === 'AWG012') return 'persistent prompt steering';
   if (finding.ruleId === 'AWG013') return 'MCP server startup';
   if (finding.ruleId === 'AWG014') return 'credentialed MCP tool access';
+  if (finding.ruleId === 'AWG015') return 'agentic surface drift';
   return 'CI runner and agent tools';
 }
 
@@ -248,6 +252,7 @@ function inferAuthority(finding) {
   if (finding.ruleId === 'AWG012') return 'agent policy context';
   if (finding.ruleId === 'AWG013') return 'developer machine or CI tool process';
   if (finding.ruleId === 'AWG014') return 'MCP server secrets';
+  if (finding.ruleId === 'AWG015') return 'repository policy approval';
   return 'workflow permissions';
 }
 

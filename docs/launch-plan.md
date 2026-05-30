@@ -10,56 +10,64 @@ Short pitch:
 
 ## Star-Worthy Demo
 
-1. Show `examples/unsafe-agent.yml`.
-2. Run:
+1. Show the terminal demo image in `docs/assets/terminal-demo.svg`.
+2. Show `examples/unsafe-agent.yml`.
+3. Run:
 
    ```bash
    node ./bin/awguard.js examples/unsafe-agent.yml --format graph
    ```
 
-3. Show the generated Mermaid chain.
-4. Run:
+4. Show the generated Mermaid chain.
+5. Run:
 
    ```bash
    node ./bin/awguard.js examples/unsafe-agent.yml --fix-dry-run
    ```
 
-5. Show the safe remediation steps.
-6. Run:
+6. Show the safe remediation steps.
+7. Run:
 
    ```bash
    node ./bin/awguard.js examples/unsafe-agent.yml --format migration
    ```
 
-7. Show the migration from unsafe agent job to read-only proposal job plus safe outputs or an approved apply job.
-8. Run:
+8. Show the migration from unsafe agent job to read-only proposal job plus safe outputs or an approved apply job.
+9. Run:
 
    ```bash
    node ./bin/awguard.js . --format score
    ```
 
-9. Show the README badge and say: "Add an AWI risk badge to your repo before adding AI agents to CI."
-10. Run:
+10. Show the README badge and say: "Add an AWI risk badge to your repo before adding AI agents to CI."
+11. Run:
 
    ```bash
    node ./bin/awguard.js . --format inventory
    ```
 
-11. Show the surface map and say: "Before you secure agent workflows, find every place the repository gives agents instructions or tools."
-12. Show an unsafe `AGENTS.md` or `.github/copilot-instructions.md` line and run:
+12. Show the surface map and say: "Before you secure agent workflows, find every place the repository gives agents instructions or tools."
+13. Run:
+
+   ```bash
+   node ./bin/awguard.js init
+   ```
+
+14. Show the one-command setup guide.
+15. Show an unsafe `AGENTS.md` or `.github/copilot-instructions.md` line and run:
 
    ```bash
    node ./bin/awguard.js . --format text
    ```
 
-13. Explain that AWGuard scans both the workflow and the persistent agent instructions that shape agent behavior.
-14. Show an unsafe `.mcp.json` with `npx @modelcontextprotocol/server-github` and a committed token, then run:
+16. Explain that AWGuard scans both the workflow and the persistent agent instructions that shape agent behavior.
+17. Show an unsafe `.mcp.json` with `npx @modelcontextprotocol/server-github` and a committed token, then run:
 
    ```bash
    node ./bin/awguard.js examples/.mcp.json --format text
    ```
 
-15. Explain the new hook: "This scanner checks repo-provided MCP tool wiring without executing the MCP server."
+18. Explain the new hook: "This scanner checks repo-provided MCP tool wiring without executing the MCP server."
 
 ## Release Checklist
 

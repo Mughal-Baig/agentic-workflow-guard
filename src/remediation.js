@@ -68,6 +68,11 @@ const fixCatalog = {
     'Move MCP credentials into prompt inputs, environment variables, or a managed secret store.',
     'Use placeholders such as ${input:token} or ${TOKEN} instead of committed literal values.',
     'Rotate any token, API key, password, or auth header that was committed.'
+  ],
+  AWG015: [
+    'Review the new agentic surface before approving it in policy.',
+    'Add reviewed files to policy.approvedFiles and reviewed MCP tools to the MCP policy allowlists.',
+    'Remove or quarantine unapproved workflows, agent instructions, prompts, skills, and MCP configs.'
   ]
 };
 
@@ -176,6 +181,20 @@ run: |
       "args": ["-y", "@modelcontextprotocol/server-github@1.2.3"],
       "env": { "GITHUB_TOKEN": "\${input:github-token}" }
     }
+  }
+}`
+    };
+  }
+
+  if (finding.ruleId === 'AWG015') {
+    return {
+      language: 'json',
+      text: `{
+  "policy": {
+    "approvedFiles": ["AGENTS.md", ".github/workflows/*", ".github/agents/*"],
+    "approvedMcpServers": ["github"],
+    "approvedMcpPackages": ["@modelcontextprotocol/server-github@1.2.3"],
+    "approvedMcpCommands": ["npx", "node"]
   }
 }`
     };

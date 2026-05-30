@@ -2,7 +2,9 @@ import process from 'node:process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { applyBaseline, createBaseline, loadBaseline, writeBaseline } from './baseline.js';
+import { loadReport, renderComparison } from './compare.js';
 import { loadConfig } from './config.js';
+import { renderInitGuide } from './init.js';
 import { renderFixDryRun } from './remediation.js';
 import { scanWorkflows, severityRank } from './scanner.js';
 import {
@@ -16,15 +18,19 @@ import {
   renderSarif,
   renderScore,
   renderSurfaceInventory,
+  renderSurfaceInventoryJson,
   renderText
 } from './reporters.js';
 
 const HELP = `Agentic Workflow Guard
 
 Usage:
-  awguard [path] [--config file] [--preset name] [--format text|json|markdown|github|sarif|graph|html|migration|score|badge|inventory] [--output file] [--baseline file] [--write-baseline file] [--fix-dry-run] [--fail-on none|low|medium|high|critical]
+  awguard [path] [--config file] [--preset name] [--format text|json|markdown|github|sarif|graph|html|migration|score|badge|inventory|inventory-json] [--output file] [--baseline file] [--write-baseline file] [--fix-dry-run] [--fail-on none|low|medium|high|critical]
+  awguard init
+  awguard --compare previous.json current.json
 
 Examples:
+  awguard init
   awguard .
   awguard .mcp.json
   awguard . --config awguard.config.json
@@ -33,20 +39,38 @@ Examples:
   awguard . --format html --output awguard-report.html
   awguard . --format migration --output awguard-migration.md
   awguard . --format inventory
+  awguard . --format inventory-json --output awguard-inventory.json
   awguard . --format score
   awguard . --format badge --output awguard-badge.json
   awguard . --fix-dry-run
   awguard . --format sarif --output awguard.sarif --fail-on none
   awguard . --write-baseline awguard.baseline.json
   awguard . --baseline awguard.baseline.json --fail-on high
+  awguard --compare old-awguard.json new-awguard.json
   awguard . --format github --fail-on medium
 `;
 
 export async function runCli(args, env = process.env) {
+  if (args[0] === 'init') {
+    console.log(renderInitGuide());
+    return;
+  }
+
   const options = parseArgs(args, env);
 
   if (options.help) {
     console.log(HELP.trim());
+    return;
+  }
+
+  if (options.compare.length > 0) {
+    const output = renderComparison(loadReport(options.compare[0]), loadReport(options.compare[1]));
+    if (options.output) {
+      const outputFile = writeOutput(options.output, output);
+      console.error(`Wrote ${outputFile}`);
+    } else {
+      console.log(output);
+    }
     return;
   }
 
@@ -87,6 +111,7 @@ export function parseArgs(args, env = {}) {
     baseline: readInput(env, 'baseline') || '',
     writeBaseline: readInput(env, 'write_baseline') || readInput(env, 'write-baseline') || '',
     config: readInput(env, 'config') || '',
+    compare: [],
     presets: splitList(readInput(env, 'preset') || readInput(env, 'presets') || ''),
     fixDryRun: readBoolInput(env, 'fix_dry_run') || readBoolInput(env, 'fix-dry-run'),
     help: false
@@ -121,6 +146,10 @@ export function parseArgs(args, env = {}) {
       options.config = args[++index];
     } else if (arg.startsWith('--config=')) {
       options.config = arg.slice('--config='.length);
+    } else if (arg === '--compare') {
+      options.compare = [args[++index], args[++index]].filter(Boolean);
+    } else if (arg.startsWith('--compare=')) {
+      options.compare = arg.slice('--compare='.length).split(',').map((item) => item.trim()).filter(Boolean);
     } else if (arg === '--preset') {
       options.presets.push(...splitList(args[++index]));
     } else if (arg.startsWith('--preset=')) {
@@ -145,9 +174,13 @@ export function parseArgs(args, env = {}) {
     'migration',
     'score',
     'badge',
-    'inventory'
+    'inventory',
+    'inventory-json'
   ]);
   validateEnum('fail-on', options.failOn, ['none', 'low', 'medium', 'high', 'critical']);
+  if (options.compare.length !== 0 && options.compare.length !== 2) {
+    throw new Error('--compare requires two awguard --format json report files');
+  }
 
   return options;
 }
@@ -167,6 +200,7 @@ function render(result, format) {
   if (format === 'score') return renderScore(result);
   if (format === 'badge') return renderBadge(result);
   if (format === 'inventory') return renderSurfaceInventory(result);
+  if (format === 'inventory-json') return renderSurfaceInventoryJson(result);
   if (format === 'github') return renderGithubAnnotations(result);
   return renderText(result);
 }

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="430" viewBox="0 0 920 430" role="img" aria-labelledby="title desc">
+  <title id="title">Agentic Workflow Guard terminal demo</title>
+  <desc id="desc">A terminal-style screenshot showing AWGuard inventory and MCP findings.</desc>
+  <rect width="920" height="430" rx="10" fill="#101820"/>
+  <rect x="0" y="0" width="920" height="42" rx="10" fill="#17242f"/>
+  <circle cx="24" cy="21" r="6" fill="#ff5f57"/>
+  <circle cx="44" cy="21" r="6" fill="#ffbd2e"/>
+  <circle cx="64" cy="21" r="6" fill="#28c840"/>
+  <text x="88" y="27" fill="#d8e6ee" font-family="Menlo, Consolas, monospace" font-size="14">awguard demo</text>
+  <text x="28" y="78" fill="#7dd3fc" font-family="Menlo, Consolas, monospace" font-size="16">$ npx awguard . --format inventory</text>
+  <text x="28" y="118" fill="#e7f4f2" font-family="Menlo, Consolas, monospace" font-size="16">Agentic Surface Inventory</text>
+  <text x="28" y="154" fill="#a7f3d0" font-family="Menlo, Consolas, monospace" font-size="14">✓ GitHub Actions workflows: 2 files, 0 findings</text>
+  <text x="28" y="184" fill="#fde68a" font-family="Menlo, Consolas, monospace" font-size="14">! Agent context files: 1 file, AWG012</text>
+  <text x="28" y="214" fill="#fca5a5" font-family="Menlo, Consolas, monospace" font-size="14">! MCP configs: 1 file, AWG013, AWG014</text>
+  <text x="28" y="260" fill="#7dd3fc" font-family="Menlo, Consolas, monospace" font-size="16">$ npx awguard examples/.mcp.json --fix-dry-run</text>
+  <text x="28" y="300" fill="#fca5a5" font-family="Menlo, Consolas, monospace" font-size="14">CRITICAL AWG014 MCP config hardcodes secrets or auth material</text>
+  <text x="28" y="330" fill="#fdba74" font-family="Menlo, Consolas, monospace" font-size="14">HIGH AWG013 MCP config starts mutable tool servers</text>
+  <text x="28" y="372" fill="#d8e6ee" font-family="Menlo, Consolas, monospace" font-size="14">Fix: pin tool packages, move credentials to prompts/env, and review policy drift.</text>
+</svg>

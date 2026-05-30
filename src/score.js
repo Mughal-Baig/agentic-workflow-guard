@@ -114,6 +114,9 @@ function actionFor(result, counts) {
   }
 
   if (counts.medium > 0) {
+    if (rules.has('AWG015')) {
+      return 'Review policy drift and approve only expected agentic surfaces.';
+    }
     return 'Tighten explicit permissions, artifact boundaries, and suppression policy.';
   }
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.0
+
+- Add `awguard init` to print starter GitHub Action, strict config, baseline, report, and badge setup snippets.
+- Add `--format inventory-json` for machine-readable agentic surface inventories.
+- Add `--compare previous.json current.json` for introduced/resolved finding and file drift reports.
+- Add policy allowlists with `AWG015` for unapproved files, MCP servers, packages, or commands.
+- Add Docker, GitLab CI, pre-commit, VS Code task, Marketplace, comparison, demo, and vulnerable lab assets.
+
 ## 1.5.0
 
 - Add `--format inventory` to map agentic repository surfaces by workflows, agent context files, and MCP configs.

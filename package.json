@@ -1,6 +1,6 @@
 {
   "name": "awguard",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Scan GitHub Actions workflows, agent instructions, and MCP configs for AI-agent injection and unsafe tool boundaries.",
   "type": "module",
   "homepage": "https://github.com/Mughal-Baig/agentic-workflow-guard#readme",
@@ -37,6 +37,7 @@
   },
   "files": [
     "action.yml",
+    "Dockerfile",
     "CHANGELOG.md",
     "bin",
     "src",

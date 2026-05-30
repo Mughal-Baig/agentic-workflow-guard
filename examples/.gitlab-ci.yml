@@ -1,0 +1,6 @@
+awguard:
+  image: node:20
+  stage: test
+  script:
+    - npx awguard@latest . --format inventory
+    - npx awguard@latest . --fail-on high

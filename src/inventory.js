@@ -105,6 +105,17 @@ export function renderInventory(result) {
   return lines.join('\n');
 }
 
+export function renderInventoryJson(result) {
+  return JSON.stringify(
+    {
+      root: result.root,
+      ...buildInventory(result)
+    },
+    null,
+    2
+  );
+}
+
 function recommendationsFor(surfaces, findings) {
   const surfaceNames = new Set(surfaces.map((surface) => surface.surface));
   const rules = new Set(findings.map((finding) => finding.ruleId));

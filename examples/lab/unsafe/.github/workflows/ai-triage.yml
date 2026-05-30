@@ -1,0 +1,16 @@
+name: Unsafe AI triage
+
+on:
+  issue_comment:
+
+permissions: write-all
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          codex --dangerously-skip-permissions --prompt "${{ github.event.comment.body }}"

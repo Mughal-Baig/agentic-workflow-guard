@@ -33,7 +33,8 @@ export function normalizeConfig(rawConfig = {}, source = 'config') {
 
   return {
     rules: normalizeRules(mergedConfig.rules || {}, source),
-    suppressions: normalizeSuppressions(mergedConfig.suppressions || {}, source)
+    suppressions: normalizeSuppressions(mergedConfig.suppressions || {}, source),
+    policy: normalizePolicy(mergedConfig.policy || {}, source)
   };
 }
 
@@ -51,7 +52,8 @@ function mergePresetConfigs(rawConfig, source) {
 
   return mergeConfigObjects(merged, {
     rules: rawConfig.rules || {},
-    suppressions: rawConfig.suppressions || {}
+    suppressions: rawConfig.suppressions || {},
+    policy: rawConfig.policy || {}
   });
 }
 
@@ -64,6 +66,10 @@ function mergeConfigObjects(base, override) {
     suppressions: {
       ...(base.suppressions || {}),
       ...(override.suppressions || {})
+    },
+    policy: {
+      ...(base.policy || {}),
+      ...(override.policy || {})
     }
   };
 }
@@ -147,6 +153,27 @@ function normalizeSuppressions(suppressions, source) {
     allowedRules: normalizedAllowedRules,
     minimumReasonLength
   };
+}
+
+function normalizePolicy(policy, source) {
+  if (!isObject(policy)) {
+    throw new Error(`${source} policy must be an object`);
+  }
+
+  return {
+    approvedFiles: normalizeStringArray(policy.approvedFiles || [], `${source} policy.approvedFiles`),
+    approvedMcpServers: normalizeStringArray(policy.approvedMcpServers || [], `${source} policy.approvedMcpServers`),
+    approvedMcpPackages: normalizeStringArray(policy.approvedMcpPackages || [], `${source} policy.approvedMcpPackages`),
+    approvedMcpCommands: normalizeStringArray(policy.approvedMcpCommands || [], `${source} policy.approvedMcpCommands`)
+  };
+}
+
+function normalizeStringArray(value, source) {
+  if (!Array.isArray(value)) {
+    throw new Error(`${source} must be an array`);
+  }
+
+  return value.map((item) => String(item));
 }
 
 function ensureKnownRule(ruleId, source) {

@@ -211,7 +211,9 @@ Agentic Workflow Guard now supports:
 
 - `--format inventory` for a surface map grouped by workflows, agent context files, and MCP configs.
 - scanning `.github/agents/*.md`, `.github/prompts/*.prompt.md`, and `.github/skills/**/SKILL.md` as persistent agent context.
-- a roadmap that moves toward policy mode, agent capability SBOMs, trend reports, and adoption generators.
+- `awguard init` for adoption snippets, `--format inventory-json` for dashboards, and `--compare` for trend reports.
+- first policy allowlists for approved files, MCP servers, MCP packages, and MCP commands.
+- a roadmap that moves toward agent capability SBOMs, richer policy ownership, and hosted monitoring.
 
 This widens the project while preserving its niche: AWGuard remains a zero-execution repository scanner for agentic risk, not a broad runtime agent firewall.
 

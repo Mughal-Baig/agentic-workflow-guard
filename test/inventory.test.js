@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
-import { buildInventory, renderInventory } from '../src/inventory.js';
+import { buildInventory, renderInventory, renderInventoryJson } from '../src/inventory.js';
 import { scanWorkflows } from '../src/scanner.js';
 
 test('builds and renders an agentic surface inventory', () => {
@@ -43,8 +43,10 @@ jobs:
   const result = scanWorkflows({ root });
   const inventory = buildInventory(result);
   const markdown = renderInventory(result);
+  const json = JSON.parse(renderInventoryJson(result));
 
   assert.equal(inventory.summary.surfaces, 3);
+  assert.equal(json.summary.surfaces, 3);
   assert.ok(inventory.surfaces.some((surface) => surface.surface === 'github-workflow'));
   assert.ok(inventory.surfaces.some((surface) => surface.surface === 'agent-context'));
   assert.ok(inventory.surfaces.some((surface) => surface.surface === 'mcp-config'));

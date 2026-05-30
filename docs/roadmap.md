@@ -54,15 +54,19 @@ Current research points:
 
 ### Now
 
-- Ship `--format inventory`.
-- Expand `AWG012` coverage to Copilot custom agents, prompts, and skills.
-- Document the widened project roadmap.
+- Shipped `--format inventory`.
+- Shipped `--format inventory-json`.
+- Shipped `awguard init`.
+- Shipped `--compare previous.json current.json`.
+- Shipped first policy allowlists with `AWG015`.
+- Expanded `AWG012` coverage to Copilot custom agents, prompts, and skills.
+- Added Docker, GitLab CI, pre-commit, VS Code task, Marketplace, comparison, visual demo, and vulnerable lab assets.
 
 ### Next
 
-- Add policy mode for MCP server allowlists and approved agent context files.
-- Add a setup generator for the GitHub Action, config, baseline, and README badge.
-- Add JSON inventory output for downstream dashboards.
+- Add agent capability SBOM export for prompts, tools, MCP servers, permissions, and write paths.
+- Add safer patch previews for common workflow permission fixes.
+- Add richer policy ownership fields for approved file owners and review cadence.
 
 ### Later
 

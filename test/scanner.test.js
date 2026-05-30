@@ -359,3 +359,42 @@ test('discovers MCP config files alongside workflows', () => {
   assert.equal(result.scannedFiles.length, 1);
   assert.equal(result.findings.some((finding) => finding.ruleId === 'AWG013' && finding.file === '.vscode/mcp.json'), true);
 });
+
+test('reports agentic surfaces and MCP servers outside policy allowlists', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'awguard-policy-'));
+  fs.writeFileSync(
+    path.join(root, '.mcp.json'),
+    `
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github@1.2.3"]
+    }
+  }
+}
+`
+  );
+
+  const result = scanWorkflows({
+    root,
+    config: {
+      rules: {},
+      suppressions: { allow: true, allowedRules: [], minimumReasonLength: 10 },
+      policy: {
+        approvedFiles: ['AGENTS.md'],
+        approvedMcpServers: ['filesystem'],
+        approvedMcpPackages: ['@modelcontextprotocol/server-filesystem@1.0.0'],
+        approvedMcpCommands: ['node']
+      }
+    }
+  });
+
+  const policyFindings = result.findings.filter((finding) => finding.ruleId === 'AWG015');
+
+  assert.equal(policyFindings.length, 4);
+  assert.ok(policyFindings.some((finding) => /approvedFiles/.test(finding.message)));
+  assert.ok(policyFindings.some((finding) => /approvedMcpServers/.test(finding.message)));
+  assert.ok(policyFindings.some((finding) => /approvedMcpPackages/.test(finding.message)));
+  assert.ok(policyFindings.some((finding) => /approvedMcpCommands/.test(finding.message)));
+});

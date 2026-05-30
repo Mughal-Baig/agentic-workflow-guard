@@ -7,6 +7,8 @@
 [![AWI risk](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Mughal-Baig/agentic-workflow-guard/main/docs/awguard-badge.json)](docs/awguard-badge.json)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
+![Agentic Workflow Guard terminal demo](docs/assets/terminal-demo.svg)
+
 `agentic-workflow-guard` is a small, zero-dependency scanner for GitHub Actions workflows, persistent agent instruction files, and MCP configs used by AI coding agents, LLMs, or automated review bots.
 
 It looks for a new class of CI/CD risk: untrusted issue, pull request, comment, or branch text flowing into an AI agent prompt, then into write-capable tools, secrets, shell scripts, persistent instructions that weaken review boundaries, or MCP servers that expand agent authority.
@@ -40,6 +42,12 @@ Install from npm:
 
 ```bash
 npx awguard .
+```
+
+Generate a starter config, GitHub Action, baseline command, and badge snippet:
+
+```bash
+npx awguard init
 ```
 
 ## Use In GitHub Actions
@@ -113,7 +121,9 @@ jobs:
 ## CLI
 
 ```bash
-awguard [path] [--config file] [--preset name] [--format text|json|markdown|github|sarif|graph|html|migration|score|badge|inventory] [--output file] [--baseline file] [--write-baseline file] [--fix-dry-run] [--fail-on none|low|medium|high|critical]
+awguard [path] [--config file] [--preset name] [--format text|json|markdown|github|sarif|graph|html|migration|score|badge|inventory|inventory-json] [--output file] [--baseline file] [--write-baseline file] [--fix-dry-run] [--fail-on none|low|medium|high|critical]
+awguard init
+awguard --compare previous.json current.json
 ```
 
 Examples:
@@ -125,6 +135,7 @@ node ./bin/awguard.js . --preset strict --format graph
 node ./bin/awguard.js . --format html --output awguard-report.html
 node ./bin/awguard.js . --format migration --output awguard-migration.md
 node ./bin/awguard.js . --format inventory
+node ./bin/awguard.js . --format inventory-json --output awguard-inventory.json
 node ./bin/awguard.js . --format score
 node ./bin/awguard.js . --format badge --output awguard-badge.json
 node ./bin/awguard.js . --fix-dry-run
@@ -132,6 +143,7 @@ node ./bin/awguard.js . --format markdown --fail-on medium
 node ./bin/awguard.js . --format sarif --output awguard.sarif --fail-on none
 node ./bin/awguard.js . --write-baseline awguard.baseline.json
 node ./bin/awguard.js . --baseline awguard.baseline.json --fail-on high
+node ./bin/awguard.js --compare old-awguard.json new-awguard.json
 node ./bin/awguard.js . --format github --fail-on high
 ```
 
@@ -252,6 +264,40 @@ node ./bin/awguard.js . --format inventory
 
 The inventory groups scanned files into GitHub Actions workflows, persistent agent context files, and MCP configs. It shows which surfaces exist, which rules fired, and what to review next. This is useful before a team enables new coding agents because it answers: "Where can agents read instructions, get tools, or act in CI?"
 
+For dashboards, use JSON:
+
+```bash
+node ./bin/awguard.js . --format inventory-json --output awguard-inventory.json
+```
+
+## Compare Reports
+
+Track newly introduced agentic risk across branches or releases:
+
+```bash
+node ./bin/awguard.js . --format json --output current-awguard.json
+node ./bin/awguard.js --compare previous-awguard.json current-awguard.json
+```
+
+The comparison report shows introduced findings, resolved findings, added scanned files, and removed scanned files.
+
+## Policy Mode
+
+Policy mode makes new agent surfaces visible during review. Add allowlists to `awguard.config.json`:
+
+```json
+{
+  "policy": {
+    "approvedFiles": ["AGENTS.md", ".github/workflows/*"],
+    "approvedMcpServers": ["github"],
+    "approvedMcpPackages": ["@modelcontextprotocol/server-github@1.2.3"],
+    "approvedMcpCommands": ["npx", "node"]
+  }
+}
+```
+
+Anything outside the policy is reported as `AWG015`.
+
 ## Agent Context Guard
 
 AWGuard also scans persistent agent instruction files:
@@ -327,6 +373,11 @@ If you omit rule ids, the suppression applies to all findings on the target line
 | AWG012 | High/Critical | Agent instruction files that weaken approval, permission, or secret boundaries |
 | AWG013 | High | MCP configs that start mutable packages, unpinned containers, or shell wrappers |
 | AWG014 | Critical | MCP configs that hardcode secrets, tokens, passwords, or auth headers |
+| AWG015 | Medium | Agentic surfaces, MCP servers, packages, or commands not approved by policy |
+
+## How It Compares
+
+See [docs/comparison.md](docs/comparison.md) for how AWGuard fits beside `zizmor`, `actionlint`, OpenSSF Scorecard, secret scanners, and MCP runtime scanners.
 
 ## Example Finding
 

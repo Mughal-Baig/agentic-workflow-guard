@@ -63,6 +63,11 @@ const ruleActions = {
     'Remove committed MCP tokens, API keys, passwords, and auth headers.',
     'Use prompted inputs, environment variables, or managed secrets for MCP credentials.',
     'Rotate credentials that were present in repository history.'
+  ],
+  AWG015: [
+    'Review the unapproved agentic surface and decide whether it belongs in the repository.',
+    'Add approved files, MCP servers, packages, and commands to policy allowlists.',
+    'Fail CI on policy drift so new agent surfaces are visible in review.'
   ]
 };
 
@@ -180,6 +185,7 @@ function riskShapeFor(findings) {
   if (rules.has('AWG012')) pieces.push('persistent agent instructions weaken review or permission boundaries');
   if (rules.has('AWG013')) pieces.push('project MCP config can change agent tool capabilities through mutable startup');
   if (rules.has('AWG014')) pieces.push('project MCP config contains committed credentials');
+  if (rules.has('AWG015')) pieces.push('agentic surface is outside the repository policy');
 
   return pieces.length > 0 ? pieces.join('; ') : 'workflow hardening issue';
 }
@@ -228,6 +234,10 @@ function allowedOperationsFor(findings) {
 
   if (rules.has('AWG014')) {
     operations.add('MCP credentials supplied by prompt input, environment variable, or secret manager only');
+  }
+
+  if (rules.has('AWG015')) {
+    operations.add('policy approval only after reviewing the workflow, agent context, MCP server, package, and command');
   }
 
   operations.add('noop or missing-data report when validation fails');
