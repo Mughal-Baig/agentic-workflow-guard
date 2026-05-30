@@ -5,6 +5,7 @@
 [![GitHub release](https://img.shields.io/github/v/release/Mughal-Baig/agentic-workflow-guard)](https://github.com/Mughal-Baig/agentic-workflow-guard/releases)
 [![npm](https://img.shields.io/npm/v/awguard)](https://www.npmjs.com/package/awguard)
 [![AWI risk](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/Mughal-Baig/agentic-workflow-guard/main/docs/awguard-badge.json)](docs/awguard-badge.json)
+[![Project site](https://img.shields.io/badge/site-live-0f766e)](https://mughal-baig.github.io/agentic-workflow-guard/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ![Agentic Workflow Guard terminal demo](docs/assets/terminal-demo.svg)
