@@ -61,6 +61,7 @@ export function renderJson(result) {
         severity: finding.severity,
         file: finding.file,
         line: finding.line,
+        column: finding.column,
         message: finding.message,
         evidence: finding.evidence,
         suggestion: finding.suggestion,
@@ -88,6 +89,7 @@ export function renderSarif(result) {
               rules: Object.entries(ruleCatalog).map(([id, rule]) => ({
                 id,
                 name: id,
+                helpUri: 'https://github.com/Mughal-Baig/agentic-workflow-guard#rule-reference',
                 shortDescription: {
                   text: rule.title
                 },
@@ -101,8 +103,10 @@ export function renderSarif(result) {
                   level: sarifSeverity[rule.severity].level
                 },
                 properties: {
-                  tags: ['security', 'github-actions', 'ai-agent', 'prompt-injection', 'mcp'],
+                  tags: ruleTags(id),
                   precision: 'medium',
+                  'awguard.ruleId': id,
+                  'awguard.category': ruleCategory(id),
                   'problem.severity': sarifSeverity[rule.severity].level,
                   'security-severity': sarifSeverity[rule.severity].score
                 }
@@ -122,13 +126,23 @@ export function renderSarif(result) {
                     uri: toSarifUri(finding.file)
                   },
                   region: {
-                    startLine: finding.line
+                    startLine: finding.line,
+                    startColumn: finding.column || 1,
+                    snippet: finding.evidence
+                      ? {
+                          text: finding.evidence
+                        }
+                      : undefined
                   }
                 }
               }
             ],
             partialFingerprints: {
-              primaryLocationLineHash: finding.fingerprint || findingFingerprint(finding)
+              primaryLocationLineHash: finding.fingerprint || findingFingerprint(finding),
+              awguardStableFindingId: finding.fingerprint || findingFingerprint(finding)
+            },
+            fingerprints: {
+              'awguard/v1': finding.fingerprint || findingFingerprint(finding)
             },
             properties: {
               severity: finding.severity,
@@ -275,6 +289,18 @@ export function renderGithubStepSummary(result, { format = 'github', failOn = 'h
   );
 
   return lines.join('\n');
+}
+
+function ruleCategory(ruleId) {
+  if (['AWG001', 'AWG002', 'AWG018'].includes(ruleId)) return 'prompt-injection';
+  if (['AWG003', 'AWG004', 'AWG005', 'AWG008', 'AWG016', 'AWG017'].includes(ruleId)) return 'github-actions-permissions';
+  if (['AWG013', 'AWG014', 'AWG015'].includes(ruleId)) return 'mcp-governance';
+  if (ruleId === 'AWG012') return 'agent-instructions';
+  return 'workflow-hardening';
+}
+
+function ruleTags(ruleId) {
+  return ['security', 'github-actions', 'ai-agent', ruleCategory(ruleId)];
 }
 
 function formatAnnotation(finding) {

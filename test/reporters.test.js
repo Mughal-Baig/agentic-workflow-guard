@@ -34,8 +34,17 @@ jobs:
   assert.equal(sarif.runs[0].tool.driver.name, 'Agentic Workflow Guard');
   assert.equal(sarif.runs[0].results[0].ruleId, 'AWG001');
   assert.equal(sarif.runs[0].results[0].locations[0].physicalLocation.artifactLocation.uri, 'agent.yml');
+  assert.ok(sarif.runs[0].results[0].locations[0].physicalLocation.region.startColumn > 1);
+  assert.match(sarif.runs[0].results[0].locations[0].physicalLocation.region.snippet.text, /github\.event\.comment\.body/);
   assert.ok(sarif.runs[0].results[0].partialFingerprints.primaryLocationLineHash);
+  assert.equal(
+    sarif.runs[0].results[0].partialFingerprints.primaryLocationLineHash,
+    sarif.runs[0].results[0].partialFingerprints.awguardStableFindingId
+  );
+  assert.equal(sarif.runs[0].results[0].fingerprints['awguard/v1'], sarif.runs[0].results[0].partialFingerprints.primaryLocationLineHash);
   assert.ok(sarif.runs[0].results[0].properties.baselineState);
+  assert.equal(sarif.runs[0].tool.driver.rules[0].helpUri, 'https://github.com/Mughal-Baig/agentic-workflow-guard#rule-reference');
+  assert.ok(sarif.runs[0].tool.driver.rules[0].properties.tags.includes('prompt-injection'));
 });
 
 test('renders GitHub job summary markdown', () => {

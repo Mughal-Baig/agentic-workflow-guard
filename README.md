@@ -448,6 +448,9 @@ If you omit rule ids, the suppression applies to all findings on the target line
 | AWG013 | High | MCP configs that start mutable packages, unpinned containers, or shell wrappers |
 | AWG014 | Critical | MCP configs that hardcode secrets, tokens, passwords, or auth headers |
 | AWG015 | Medium | Agentic surfaces, MCP servers, packages, or commands not approved by policy |
+| AWG016 | High | Checkout credentials persisting in elevated agent workflows |
+| AWG017 | Critical | Agent writeback without branch, PR, or artifact containment |
+| AWG018 | High/Critical | Untrusted GitHub event text passed into MCP tool inputs or environment |
 
 ## How It Compares
 

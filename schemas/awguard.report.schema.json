@@ -91,6 +91,10 @@
           "type": "integer",
           "minimum": 1
         },
+        "column": {
+          "type": ["integer", "null"],
+          "minimum": 1
+        },
         "message": {
           "type": "string"
         },

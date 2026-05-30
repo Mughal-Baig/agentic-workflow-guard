@@ -29,6 +29,7 @@ jobs:
   assert.ok(rules.includes('AWG004'));
   assert.ok(rules.includes('AWG005'));
   assert.ok(rules.includes('AWG006'));
+  assert.ok(rules.includes('AWG016'));
 });
 
 test('detects pull_request_target checkout of pull request head code', () => {
@@ -46,6 +47,149 @@ jobs:
   const findings = scanWorkflowText(workflow);
 
   assert.equal(findings.some((finding) => finding.ruleId === 'AWG003'), true);
+});
+
+test('detects granular write permissions on agent jobs', () => {
+  const workflow = `
+on: [workflow_dispatch]
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+jobs:
+  triage:
+    steps:
+      - run: codex --prompt-file prompt.txt
+`;
+
+  const broadPermissionFindings = scanWorkflowText(workflow).filter((finding) => finding.ruleId === 'AWG004');
+
+  assert.equal(broadPermissionFindings.length, 3);
+  assert.ok(broadPermissionFindings.some((finding) => /contents: write/.test(finding.evidence)));
+  assert.ok(broadPermissionFindings.some((finding) => /pull-requests: write/.test(finding.evidence)));
+  assert.ok(broadPermissionFindings.some((finding) => /id-token: write/.test(finding.evidence)));
+});
+
+test('detects checkout credentials persisting in elevated agent jobs', () => {
+  const risky = `
+on: [pull_request]
+permissions:
+  contents: write
+jobs:
+  triage:
+    steps:
+      - uses: actions/checkout@v4
+      - run: codex --prompt-file prompt.txt
+`;
+
+  const safeReadOnly = `
+on: [pull_request]
+permissions:
+  contents: read
+jobs:
+  triage:
+    steps:
+      - uses: actions/checkout@v4
+      - run: codex --prompt-file prompt.txt
+`;
+
+  const safePersistFalse = `
+on: [pull_request]
+permissions:
+  contents: write
+jobs:
+  triage:
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - run: codex --prompt-file prompt.txt
+`;
+
+  assert.ok(scanWorkflowText(risky).some((finding) => finding.ruleId === 'AWG016'));
+  assert.equal(scanWorkflowText(safeReadOnly).some((finding) => finding.ruleId === 'AWG016'), false);
+  assert.equal(scanWorkflowText(safePersistFalse).some((finding) => finding.ruleId === 'AWG016'), false);
+});
+
+test('detects agent writeback without branch or PR containment', () => {
+  const directPush = `
+on: [workflow_dispatch]
+permissions:
+  contents: write
+jobs:
+  fix:
+    steps:
+      - run: |
+          codex --prompt-file prompt.txt
+          git commit -am "agent fix"
+          git push origin main
+`;
+
+  const containedPush = `
+on: [workflow_dispatch]
+permissions:
+  contents: write
+jobs:
+  fix:
+    steps:
+      - run: |
+          codex --prompt-file prompt.txt
+          git switch -c agent/fix
+          git commit -am "agent fix"
+          git push origin HEAD:agent/fix
+          gh pr create --fill
+`;
+
+  assert.ok(scanWorkflowText(directPush).some((finding) => finding.ruleId === 'AWG017'));
+  assert.equal(scanWorkflowText(containedPush).some((finding) => finding.ruleId === 'AWG017'), false);
+});
+
+test('detects untrusted GitHub event text reaching MCP inputs', () => {
+  const issueComment = `
+on: [issue_comment]
+jobs:
+  triage:
+    steps:
+      - env:
+          MCP_ARGS: \${{ github.event.comment.body }}
+        run: npx @modelcontextprotocol/server-github
+`;
+  const pullRequest = `
+on: [pull_request]
+jobs:
+  triage:
+    steps:
+      - env:
+          TOOL_INPUT: \${{ github.event.pull_request.title }}
+        run: claude mcp call github
+`;
+  const workflowDispatch = `
+on:
+  workflow_dispatch:
+    inputs:
+      request:
+        required: true
+jobs:
+  triage:
+    steps:
+      - env:
+          MCP_PAYLOAD: \${{ inputs.request }}
+        run: codex mcp run github
+`;
+  const safeConstant = `
+on: [workflow_dispatch]
+jobs:
+  triage:
+    steps:
+      - env:
+          MCP_PAYLOAD: reviewed-static-query
+        run: codex mcp run github
+`;
+
+  assert.ok(scanWorkflowText(issueComment).some((finding) => finding.ruleId === 'AWG018'));
+  assert.ok(scanWorkflowText(pullRequest).some((finding) => finding.ruleId === 'AWG018'));
+  assert.ok(scanWorkflowText(workflowDispatch).some((finding) => finding.ruleId === 'AWG018'));
+  assert.equal(scanWorkflowText(safeConstant).some((finding) => finding.ruleId === 'AWG018'), false);
 });
 
 test('keeps ordinary non-agent workflows quiet', () => {

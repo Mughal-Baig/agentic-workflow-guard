@@ -40,7 +40,7 @@ const mcpConfigFiles = new Set([
 ]);
 
 const untrustedFieldPattern =
-  /\${{\s*github\.(?:event\.[\w.-]+\.)?(?:body|default_branch|email|head_ref|label|message|name|page_name|ref|title)\s*}}|github\.(?:event\.[\w.-]+\.)?(?:body|default_branch|email|head_ref|label|message|name|page_name|ref|title)/i;
+  /\${{\s*(?:github\.(?:event\.[\w.-]+\.)?(?:body|default_branch|email|head_ref|label|message|name|page_name|ref|title)|github\.event\.inputs\.[\w-]+|inputs\.[\w-]+)\s*}}|(?:github\.(?:event\.[\w.-]+\.)?(?:body|default_branch|email|head_ref|label|message|name|page_name|ref|title)|github\.event\.inputs\.[\w-]+|inputs\.[\w-]+)/i;
 
 const agentPattern =
   /\b(aider|anthropic|claude|codex|copilot|cursor|gemini|langchain|litellm|llm|mistral|ollama|openai|openrouter)\b|AI_API_KEY|ANTHROPIC_API_KEY|GEMINI_API_KEY|OPENAI_API_KEY/i;
@@ -56,6 +56,18 @@ const commandSinkPattern =
 
 const modelOutputPattern =
   /\b(agent|ai|completion|llm|model|output|patch|plan|response|result)\b/i;
+
+const mcpWorkflowPattern =
+  /\b(?:mcp|modelcontextprotocol|mcpServers|MCP_[A-Z0-9_]+|claude\s+mcp|codex\s+mcp|cursor\s+mcp)\b|@modelcontextprotocol\//i;
+
+const mcpInputKeyPattern =
+  /^\s*(?:MCP_[A-Z0-9_]+|(?:tool|mcp|server|args?|payload|request)[\w-]*)\s*[:=]/i;
+
+const repositoryWritePattern =
+  /\b(?:git\s+(?:commit|push|tag)|gh\s+(?:api|release|repo|workflow|pr\s+merge|issue\s+(?:close|edit)|label\s+)|npm\s+publish)\b/i;
+
+const safeWriteBoundaryPattern =
+  /\b(?:create-pull-request|gh\s+pr\s+create|pull-request|actions\/upload-artifact|upload-artifact|artifact-only)\b/i;
 
 const suppressionPattern = /#\s*awguard-disable-(next-line|line)\b(.*)$/i;
 
@@ -181,6 +193,24 @@ export const ruleCatalog = {
     severity: 'medium',
     suggestion:
       'Add the workflow, agent context file, MCP config, MCP server, package, or command to the policy allowlist only after review. Otherwise remove or harden it.'
+  },
+  AWG016: {
+    title: 'Checkout credentials persist into an agent workflow',
+    severity: 'high',
+    suggestion:
+      'Set actions/checkout persist-credentials: false in agent jobs with write tokens, or split checkout and writeback into separate reviewed jobs.'
+  },
+  AWG017: {
+    title: 'Agent writeback lacks branch or PR containment',
+    severity: 'critical',
+    suggestion:
+      'Write agent changes to an isolated branch, draft pull request, or artifact. Do not let autonomous agent jobs push directly to protected branches.'
+  },
+  AWG018: {
+    title: 'Untrusted event text reaches MCP tool inputs or environment',
+    severity: 'high',
+    suggestion:
+      'Keep issue, PR, branch, comment, and workflow_dispatch input text out of MCP tool arguments and environment variables unless it is reviewed and sanitized.'
   }
 };
 
@@ -245,6 +275,9 @@ export function scanWorkflowText(text, file = 'workflow.yml', root = process.cwd
   detectSecretsInAgentWorkflow(context);
   detectUnsafeAgentFlags(context);
   detectModelOutputSinks(context);
+  detectCheckoutCredentialPersistence(context);
+  detectUnsafeAgentWriteback(context);
+  detectUntrustedMcpInputs(context);
   detectMissingPermissions(context);
   detectWorkflowRunArtifacts(context);
   detectUnpinnedActions(context);
@@ -401,7 +434,7 @@ function detectPromptToAgent(context) {
 function detectScriptInjection(context) {
   context.lines.forEach((line, index) => {
     if (!untrustedFieldPattern.test(line)) return;
-    if (!context.runBlocks.has(index) && !/^\s*run\s*:/.test(line)) return;
+    if (!context.runBlocks.has(index) && !/^\s*(?:-\s*)?run\s*:/.test(line)) return;
 
     addFinding(context, 'AWG002', index + 1, {
       evidence: line.trim(),
@@ -484,6 +517,66 @@ function detectModelOutputSinks(context) {
   });
 }
 
+function detectCheckoutCredentialPersistence(context) {
+  if (!context.hasAgent || (!context.hasBroadPermission && !context.triggers.has('pull_request_target'))) return;
+
+  context.lines.forEach((line, index) => {
+    if (!/uses\s*:\s*actions\/checkout@/i.test(line)) return;
+
+    const checkoutBlock = windowAfter(context.lines, index, 10);
+    const persistIndex = checkoutBlock.findIndex((candidate) => /^\s*persist-credentials\s*:/i.test(candidate));
+    const hasPersistFalse =
+      persistIndex !== -1 && /^\s*persist-credentials\s*:\s*false\s*(?:#.*)?$/i.test(checkoutBlock[persistIndex]);
+
+    if (hasPersistFalse) return;
+
+    const lineOffset = persistIndex === -1 ? 0 : persistIndex;
+    const evidence = persistIndex === -1 ? line.trim() : checkoutBlock[persistIndex].trim();
+    const message =
+      persistIndex === -1
+        ? 'actions/checkout persists the GitHub token by default in an agent workflow with elevated authority.'
+        : 'actions/checkout explicitly persists credentials in an agent workflow with elevated authority.';
+
+    addFinding(context, 'AWG016', index + lineOffset + 1, {
+      evidence,
+      message
+    });
+  });
+}
+
+function detectUnsafeAgentWriteback(context) {
+  if (!context.hasAgent || !context.hasBroadPermission) return;
+
+  context.lines.forEach((line, index) => {
+    if (!context.runBlocks.has(index) && !/^\s*(?:-\s*)?run\s*:/.test(line)) return;
+    if (!repositoryWritePattern.test(line)) return;
+
+    const windowText = windowAround(context.lines, index, 8).join('\n');
+    if (safeWriteBoundaryPattern.test(windowText) && !isProtectedBranchPush(line)) return;
+
+    addFinding(context, 'AWG017', index + 1, {
+      evidence: line.trim(),
+      message: 'An agent job with write-capable permissions appears to write back without a branch, PR, or artifact boundary.'
+    });
+  });
+}
+
+function detectUntrustedMcpInputs(context) {
+  context.lines.forEach((line, index) => {
+    if (!untrustedFieldPattern.test(line)) return;
+
+    const windowText = windowAround(context.lines, index, 8).join('\n');
+    if (!mcpWorkflowPattern.test(windowText) && !mcpInputKeyPattern.test(line)) return;
+
+    const severity = context.hasBroadPermission || context.hasSecret ? 'critical' : ruleCatalog.AWG018.severity;
+    addFinding(context, 'AWG018', index + 1, {
+      severity,
+      evidence: line.trim(),
+      message: 'User-controlled GitHub event text appears to reach MCP tool arguments or environment variables.'
+    });
+  });
+}
+
 function detectMissingPermissions(context) {
   if (!context.hasAgent || context.hasPermissionBlock) return;
 
@@ -500,7 +593,7 @@ function detectWorkflowRunArtifacts(context) {
   if (!context.triggers.has('workflow_run')) return;
   if (!/actions\/download-artifact@|download-artifact/i.test(context.lines.join('\n'))) return;
 
-  const firstRunLine = context.lines.findIndex((line) => /^\s*run\s*:/.test(line));
+  const firstRunLine = context.lines.findIndex((line) => /^\s*(?:-\s*)?run\s*:/.test(line));
   if (firstRunLine === -1) return;
 
   addFinding(context, 'AWG009', firstRunLine + 1, {
@@ -712,6 +805,7 @@ function addFinding(context, ruleId, line, overrides = {}) {
     file: context.relativeFile,
     absoluteFile: context.file,
     line,
+    column: overrides.column || findEvidenceColumn(context.lines[line - 1], overrides.evidence),
     message: overrides.message || docs.title,
     evidence: overrides.evidence || '',
     suggestion: overrides.suggestion || docs.suggestion
@@ -731,6 +825,12 @@ function addFinding(context, ruleId, line, overrides = {}) {
     fingerprint: findingFingerprint(finding),
     baselineState: 'new'
   });
+}
+
+function findEvidenceColumn(sourceLine = '', evidence = '') {
+  if (!evidence) return 1;
+  const index = sourceLine.indexOf(evidence);
+  return index === -1 ? 1 : index + 1;
 }
 
 function collectSuppressions(lines, rawSuppressionConfig = {}) {
@@ -882,7 +982,7 @@ function markRunBlocks(lines) {
 
   lines.forEach((line, index) => {
     const indent = leadingSpaces(line);
-    const startsRun = /^\s*run\s*:/.test(line);
+    const startsRun = /^\s*(?:-\s*)?run\s*:/.test(line);
 
     if (startsRun) {
       runBlocks.add(index);
@@ -909,6 +1009,12 @@ function isBroadPermissionLine(line) {
       line
     )
   );
+}
+
+function isProtectedBranchPush(line) {
+  if (!/\bgit\s+push\b/i.test(line)) return false;
+  if (/\b(?:main|master|production|release)\b/i.test(line)) return true;
+  return !/\bHEAD:(?!main\b|master\b|production\b|release\b)[\w./-]+\b/i.test(line);
 }
 
 function discoverAgentInstructionFiles(root) {

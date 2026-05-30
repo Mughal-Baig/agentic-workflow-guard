@@ -9,6 +9,9 @@
 - Add `awguard templates` for GitHub Actions, code scanning, GitLab CI, pre-commit, and VS Code snippets.
 - Add `awguard policy-pack` for OSS, strict, and enterprise policy starter configs.
 - Add `scan.include` and `scan.exclude` config globs for narrowing discovered scan files.
+- Add `AWG016`, `AWG017`, and `AWG018` for checkout credentials, unsafe agent writeback, and MCP input injection.
+- Improve SARIF metadata with stable AWGuard fingerprints, categories, snippets, and columns.
+- Move the JavaScript GitHub Action runtime to Node 24.
 - Add `schemas/awguard.config.schema.json` for editor validation of AWGuard config files.
 - Add schemas for JSON scan reports, inventories, comparisons, baselines, and badge endpoints.
 - Add compare report surface diffs and `--compare ... --format json`.
