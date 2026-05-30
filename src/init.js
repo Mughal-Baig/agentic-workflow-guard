@@ -47,6 +47,7 @@ export function renderInitGuide({ actionRef = 'v0' } = {}) {
           approvedFiles: ['AGENTS.md', '.github/workflows/*'],
           approvedMcpServers: [],
           approvedMcpPackages: [],
+          approvedMcpPackageScopes: ['@modelcontextprotocol/'],
           approvedMcpCommands: ['npx', 'node', 'uvx', 'docker']
         },
         suppressions: {

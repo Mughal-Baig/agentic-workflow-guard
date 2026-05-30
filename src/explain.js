@@ -90,6 +90,11 @@ const ruleDetails = {
     detects: 'Untrusted GitHub event text flowing into MCP tool arguments or environment variables.',
     why: 'MCP tools can bridge prompt input into external systems, so injected text can become tool instructions.',
     safePattern: 'Treat event text as untrusted data, sanitize it, and require review before passing it to MCP tools.'
+  },
+  AWG019: {
+    detects: 'MCP package specs outside configured trusted package scopes.',
+    why: 'Project-scoped MCP packages expand agent capability, so publisher reputation should be reviewed before trust is granted.',
+    safePattern: 'Keep trusted package scopes narrow, pin approved packages, and document the review in policy.'
   }
 };
 

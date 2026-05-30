@@ -170,6 +170,7 @@ function normalizePolicy(policy, source) {
     approvedFiles: normalizeStringArray(policy.approvedFiles || [], `${source} policy.approvedFiles`),
     approvedMcpServers: normalizeStringArray(policy.approvedMcpServers || [], `${source} policy.approvedMcpServers`),
     approvedMcpPackages: normalizeStringArray(policy.approvedMcpPackages || [], `${source} policy.approvedMcpPackages`),
+    approvedMcpPackageScopes: normalizeStringArray(policy.approvedMcpPackageScopes || [], `${source} policy.approvedMcpPackageScopes`),
     approvedMcpCommands: normalizeStringArray(policy.approvedMcpCommands || [], `${source} policy.approvedMcpCommands`)
   };
 }

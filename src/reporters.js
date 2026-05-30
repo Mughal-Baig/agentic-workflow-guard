@@ -296,7 +296,7 @@ export function renderGithubStepSummary(result, { format = 'github', failOn = 'h
 function ruleCategory(ruleId) {
   if (['AWG001', 'AWG002', 'AWG018'].includes(ruleId)) return 'prompt-injection';
   if (['AWG003', 'AWG004', 'AWG005', 'AWG008', 'AWG016', 'AWG017'].includes(ruleId)) return 'github-actions-permissions';
-  if (['AWG013', 'AWG014', 'AWG015'].includes(ruleId)) return 'mcp-governance';
+  if (['AWG013', 'AWG014', 'AWG015', 'AWG019'].includes(ruleId)) return 'mcp-governance';
   if (ruleId === 'AWG012') return 'agent-instructions';
   return 'workflow-hardening';
 }

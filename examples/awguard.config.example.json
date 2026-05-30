@@ -22,6 +22,7 @@
     "approvedFiles": ["AGENTS.md", ".github/workflows/*"],
     "approvedMcpServers": ["github"],
     "approvedMcpPackages": ["@modelcontextprotocol/server-github@1.2.3"],
+    "approvedMcpPackageScopes": ["@modelcontextprotocol/"],
     "approvedMcpCommands": ["npx", "node"]
   }
 }

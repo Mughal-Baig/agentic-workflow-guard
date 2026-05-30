@@ -229,6 +229,13 @@ export const ruleCatalog = {
     remediationCode: 'mcp.sanitize-untrusted-input',
     suggestion:
       'Keep issue, PR, branch, comment, and workflow_dispatch input text out of MCP tool arguments and environment variables unless it is reviewed and sanitized.'
+  },
+  AWG019: {
+    title: 'MCP package is outside trusted package scopes',
+    severity: 'medium',
+    remediationCode: 'mcp.review-package-reputation',
+    suggestion:
+      'Review MCP package publisher, source repository, release cadence, and install scripts before approving it. Add reviewed scopes to policy.approvedMcpPackageScopes.'
   }
 };
 
@@ -784,6 +791,18 @@ function detectMcpPolicy(context, server) {
       message: `MCP server "${server.name}" uses a package not listed in policy.approvedMcpPackages.`
     });
   }
+
+  const packageName = packageNameFromSpec(packageSpec);
+  if (
+    policy.approvedMcpPackageScopes?.length > 0 &&
+    packageName &&
+    !matchesTrustedPackageScope(packageName, policy.approvedMcpPackageScopes)
+  ) {
+    addFinding(context, 'AWG019', locateMcpLine(context, server, packageSpec), {
+      evidence: `MCP server "${server.name}" package: ${packageSpec}`,
+      message: `MCP package "${packageName}" is not in policy.approvedMcpPackageScopes.`
+    });
+  }
 }
 
 function detectFilePolicy(file, root, config) {
@@ -1283,6 +1302,29 @@ function findMcpPackageSpec(baseCommand, args) {
   }
 
   return '';
+}
+
+function packageNameFromSpec(packageSpec = '') {
+  if (!packageSpec || packageSpec.startsWith('.') || packageSpec.startsWith('/') || packageSpec.startsWith('${')) return '';
+  const withoutAlias = packageSpec.startsWith('npm:') ? packageSpec.slice('npm:'.length) : packageSpec;
+  if (/^(?:https?|git\+?ssh|git\+?https?):/i.test(withoutAlias)) return withoutAlias;
+
+  if (withoutAlias.startsWith('@')) {
+    const match = withoutAlias.match(/^(@[^/]+\/[^@/]+)/);
+    return match ? match[1] : withoutAlias;
+  }
+
+  return withoutAlias.split('@')[0];
+}
+
+function matchesTrustedPackageScope(packageName, scopes) {
+  return scopes.some((scope) => {
+    const normalized = String(scope).trim();
+    if (!normalized) return false;
+    if (normalized.endsWith('/')) return packageName.startsWith(normalized);
+    if (normalized.startsWith('@') && !normalized.includes('/')) return packageName.startsWith(`${normalized}/`);
+    return packageName === normalized || packageName.startsWith(normalized);
+  });
 }
 
 function isMutablePackageSpec(spec) {

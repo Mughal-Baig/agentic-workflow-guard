@@ -27,6 +27,8 @@
 - Add a real-world pattern corpus for unsafe agent workflow, prompt, instruction, Cursor rule, and MCP examples.
 - Add VS Code task, problem matcher, and extension proof-of-concept assets.
 - Add a local dashboard proof of concept for AWI score and finding trends.
+- Add opt-in `--fix` for narrow workflow hardening edits and improve `--fix-dry-run` with an autofix plan.
+- Add `AWG019` for offline MCP package reputation policy using trusted package scopes.
 
 ## 1.6.0
 

@@ -29,7 +29,7 @@
       "description": "Rule severity overrides. Use \"off\" to disable a rule.",
       "additionalProperties": false,
       "patternProperties": {
-        "^AWG(00[1-9]|01[0-5])$": {
+        "^AWG(00[1-9]|01[0-9])$": {
           "oneOf": [
             {
               "$ref": "#/$defs/ruleSeverity"
@@ -111,6 +111,10 @@
           "$ref": "#/$defs/stringList",
           "description": "Reviewed MCP package or container specs, preferably pinned to exact versions or digests."
         },
+        "approvedMcpPackageScopes": {
+          "$ref": "#/$defs/stringList",
+          "description": "Reviewed npm package scopes or prefixes for optional offline MCP package reputation checks, for example @modelcontextprotocol/."
+        },
         "approvedMcpCommands": {
           "$ref": "#/$defs/stringList",
           "description": "Reviewed MCP launch commands such as node, npx, uvx, or docker."
@@ -140,7 +144,11 @@
         "AWG012",
         "AWG013",
         "AWG014",
-        "AWG015"
+        "AWG015",
+        "AWG016",
+        "AWG017",
+        "AWG018",
+        "AWG019"
       ]
     },
     "ruleSeverity": {

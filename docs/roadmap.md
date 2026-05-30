@@ -80,6 +80,8 @@ Current research points:
 - Shipped real-world pattern corpus for public demos and regression coverage.
 - Shipped VS Code task problem matcher and extension proof of concept.
 - Shipped local AWI trend dashboard proof of concept with sample history data.
+- Shipped opt-in safe autofix mode for narrow workflow permission and checkout hardening edits.
+- Shipped offline MCP package reputation policy checks with trusted package scopes.
 - Shipped `awguard.config.json` schema support.
 - Shipped stable schemas for machine-readable report outputs.
 - Shipped GitHub Actions job summaries.
@@ -92,7 +94,6 @@ Current research points:
 ### Next
 
 - Add agent capability SBOM export for prompts, tools, MCP servers, permissions, and write paths.
-- Add safer patch previews for common workflow permission fixes.
 - Add richer policy ownership fields for approved file owners and review cadence.
 - Add screenshot automation for the report gallery and Marketplace listing.
 - Add more public corpus fixtures for popular agent PR review and triage patterns.

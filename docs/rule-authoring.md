@@ -15,7 +15,7 @@ Good AWGuard rules are:
 ## Add A Rule
 
 1. Add a `ruleCatalog` entry in `src/scanner.js`.
-2. Choose a stable rule id such as `AWG019`.
+2. Choose a stable rule id such as `AWG020`.
 3. Set `title`, default `severity`, `remediationCode`, and `suggestion`.
 4. Implement a focused detector function in `src/scanner.js`.
 5. Call the detector from the relevant scan path:

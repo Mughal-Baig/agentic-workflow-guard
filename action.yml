@@ -38,6 +38,10 @@ inputs:
     description: Print remediation guidance instead of the normal report.
     required: false
     default: 'false'
+  fix:
+    description: Apply narrow safe workflow hardening edits instead of the normal report. Review git diff before committing generated changes.
+    required: false
+    default: 'false'
 runs:
   using: node24
   main: bin/awguard.js

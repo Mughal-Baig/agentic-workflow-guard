@@ -88,10 +88,15 @@ const fixCatalog = {
     'Move untrusted event text into a reviewed input file before MCP tool use.',
     'Sanitize issue, PR, comment, branch, and workflow_dispatch input text before passing it to MCP tools.',
     'Keep MCP tool calls read-only unless a maintainer approves the request.'
+  ],
+  AWG019: [
+    'Review MCP package publisher, repository, release cadence, and install scripts before approval.',
+    'Add trusted package scopes to policy.approvedMcpPackageScopes after review.',
+    'Prefer pinned packages from reviewed organizations or local audited servers.'
   ]
 };
 
-export function renderFixDryRun(result) {
+export function renderFixDryRun(result, { autofixPlan = null } = {}) {
   const lines = ['Agentic Workflow Guard Fix Dry Run', ''];
 
   if (result.findings.length === 0) {
@@ -117,6 +122,15 @@ export function renderFixDryRun(result) {
       lines.push('```');
     }
 
+    lines.push('');
+  }
+
+  if (autofixPlan?.changes > 0) {
+    lines.push('Autofix plan:');
+    for (const file of autofixPlan.files) {
+      lines.push(`- ${file.file}: ${file.changes.length} safe change(s) available`);
+    }
+    lines.push('Apply these narrow workflow hardening edits with `awguard --fix` and review git diff before committing.');
     lines.push('');
   }
 
@@ -209,6 +223,7 @@ run: |
     "approvedFiles": ["AGENTS.md", ".github/workflows/*", ".github/agents/*"],
     "approvedMcpServers": ["github"],
     "approvedMcpPackages": ["@modelcontextprotocol/server-github@1.2.3"],
+    "approvedMcpPackageScopes": ["@modelcontextprotocol/"],
     "approvedMcpCommands": ["npx", "node"]
   }
 }`
@@ -243,6 +258,17 @@ run: |
 run: |
   printf '%s\\n' "$UNTRUSTED_TEXT" > untrusted-input.txt
   codex mcp run github --input reviewed-request.json`
+    };
+  }
+
+  if (finding.ruleId === 'AWG019') {
+    return {
+      language: 'json',
+      text: `{
+  "policy": {
+    "approvedMcpPackageScopes": ["@modelcontextprotocol/"]
+  }
+}`
     };
   }
 

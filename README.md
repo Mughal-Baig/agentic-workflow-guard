@@ -138,7 +138,7 @@ jobs:
 ## CLI
 
 ```bash
-awguard [path] [--config file] [--preset name] [--format text|json|markdown|github|sarif|graph|html|migration|score|badge|inventory|inventory-json] [--output file] [--baseline file] [--write-baseline file] [--fix-dry-run] [--fail-on none|low|medium|high|critical]
+awguard [path] [--config file] [--preset name] [--format text|json|markdown|github|sarif|graph|html|migration|score|badge|inventory|inventory-json] [--output file] [--baseline file] [--write-baseline file] [--fix-dry-run] [--fix] [--fail-on none|low|medium|high|critical]
 awguard init
 awguard doctor [path] [--config file] [--preset name]
 awguard explain [AWG###]
@@ -172,6 +172,7 @@ node ./bin/awguard.js . --format inventory-json --output awguard-inventory.json
 node ./bin/awguard.js . --format score
 node ./bin/awguard.js . --format badge --output awguard-badge.json
 node ./bin/awguard.js . --fix-dry-run
+node ./bin/awguard.js . --fix
 node ./bin/awguard.js . --format markdown --fail-on medium
 node ./bin/awguard.js . --format sarif --output awguard.sarif --fail-on none
 node ./bin/awguard.js . --write-baseline awguard.baseline.json
@@ -411,6 +412,7 @@ Policy mode makes new agent surfaces visible during review. Add allowlists to `a
     "approvedFiles": ["AGENTS.md", ".github/workflows/*"],
     "approvedMcpServers": ["github"],
     "approvedMcpPackages": ["@modelcontextprotocol/server-github@1.2.3"],
+    "approvedMcpPackageScopes": ["@modelcontextprotocol/"],
     "approvedMcpCommands": ["npx", "node"]
   }
 }
@@ -453,6 +455,7 @@ AWGuard also scans project-scoped MCP config files without starting the configur
 - `claude_desktop_config.json`
 
 It flags MCP configs that start mutable packages such as `npx package`, `uvx package@latest`, or unpinned Docker images, and configs that commit tokens, API keys, passwords, or authorization headers.
+When `policy.approvedMcpPackageScopes` is configured, it also reports MCP packages outside reviewed publisher scopes as `AWG019` without contacting package registries.
 
 ## Fix Dry Run
 
@@ -461,6 +464,14 @@ Print remediation guidance without editing files:
 ```bash
 node ./bin/awguard.js examples/unsafe-agent.yml --fix-dry-run
 ```
+
+Apply only narrow, deterministic workflow hardening edits:
+
+```bash
+node ./bin/awguard.js . --fix
+```
+
+Autofix currently handles safe `permissions: write-all` replacement, missing top-level `permissions: contents: read`, and `actions/checkout` `persist-credentials: false`. Review `git diff` before committing.
 
 ## Explain And Demo
 
@@ -511,6 +522,7 @@ If you omit rule ids, the suppression applies to all findings on the target line
 | AWG016 | High | Checkout credentials persisting in elevated agent workflows |
 | AWG017 | Critical | Agent writeback without branch, PR, or artifact containment |
 | AWG018 | High/Critical | Untrusted GitHub event text passed into MCP tool inputs or environment |
+| AWG019 | Medium | MCP packages outside configured trusted package scopes |
 
 JSON and SARIF outputs also include a stable `remediationCode` such as `permissions.tighten-token`, `mcp.pin-server`, or `writeback.use-pr-branch`. Use these codes for dashboards, routing, and automation that should not depend on free-text suggestions.
 
@@ -550,13 +562,10 @@ node ./bin/awguard.js examples/corpus --format migration
 
 ## Roadmap
 
-- Safe autofix for low-risk permission changes.
-- Safe-output migration patch previews for common triage and review bots.
 - Hosted AWI score API for dynamic cross-repository badges.
 - Agent capability SBOM for prompts, tools, MCP servers, permissions, and write paths.
 - Trend reports that show newly added agent surfaces and newly introduced findings.
 - GitHub App integration for always-on repository monitoring.
-- VS Code task and extension proof of concept.
 
 ## Contributing And Security
 

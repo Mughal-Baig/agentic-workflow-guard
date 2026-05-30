@@ -59,6 +59,7 @@ test('normalizes policy allowlists', () => {
       approvedFiles: ['AGENTS.md', '.github/workflows/*'],
       approvedMcpServers: ['github'],
       approvedMcpPackages: ['@modelcontextprotocol/server-github@1.2.3'],
+      approvedMcpPackageScopes: ['@modelcontextprotocol/'],
       approvedMcpCommands: ['npx']
     }
   });
@@ -66,6 +67,7 @@ test('normalizes policy allowlists', () => {
   assert.deepEqual(config.policy.approvedFiles, ['AGENTS.md', '.github/workflows/*']);
   assert.deepEqual(config.policy.approvedMcpServers, ['github']);
   assert.deepEqual(config.policy.approvedMcpPackages, ['@modelcontextprotocol/server-github@1.2.3']);
+  assert.deepEqual(config.policy.approvedMcpPackageScopes, ['@modelcontextprotocol/']);
   assert.deepEqual(config.policy.approvedMcpCommands, ['npx']);
 });
 

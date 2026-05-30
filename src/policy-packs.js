@@ -42,6 +42,7 @@ const policyPacks = {
         approvedFiles: ['AGENTS.md', '.github/workflows/*'],
         approvedMcpServers: [],
         approvedMcpPackages: [],
+        approvedMcpPackageScopes: ['@modelcontextprotocol/'],
         approvedMcpCommands: ['node', 'npx', 'uvx', 'docker']
       },
       suppressions: {
@@ -63,6 +64,7 @@ const policyPacks = {
         approvedFiles: [],
         approvedMcpServers: [],
         approvedMcpPackages: [],
+        approvedMcpPackageScopes: [],
         approvedMcpCommands: []
       },
       suppressions: {
@@ -85,6 +87,7 @@ const policyPacks = {
         approvedFiles: ['AGENTS.md'],
         approvedMcpServers: [],
         approvedMcpPackages: [],
+        approvedMcpPackageScopes: ['@modelcontextprotocol/'],
         approvedMcpCommands: ['node', 'docker']
       },
       suppressions: {

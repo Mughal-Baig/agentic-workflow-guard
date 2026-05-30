@@ -18,6 +18,7 @@ export function buildPolicyWizard(result, { existingConfig = {} } = {}) {
       approvedFiles,
       approvedMcpServers: mergeUnique(policy.approvedMcpServers || [], mcp.servers),
       approvedMcpPackages: mergeUnique(policy.approvedMcpPackages || [], mcp.packages),
+      approvedMcpPackageScopes: mergeUnique(policy.approvedMcpPackageScopes || [], mcp.packageScopes),
       approvedMcpCommands: mergeUnique(policy.approvedMcpCommands || [], mcp.commands)
     }
   };
@@ -27,6 +28,7 @@ export function buildPolicyWizard(result, { existingConfig = {} } = {}) {
       approvedFiles: config.policy.approvedFiles.length,
       approvedMcpServers: config.policy.approvedMcpServers.length,
       approvedMcpPackages: config.policy.approvedMcpPackages.length,
+      approvedMcpPackageScopes: config.policy.approvedMcpPackageScopes.length,
       approvedMcpCommands: config.policy.approvedMcpCommands.length
     },
     config,
@@ -49,6 +51,7 @@ export function renderPolicyWizard(wizard, { format = 'markdown' } = {}) {
     `| Files | ${wizard.summary.approvedFiles} |`,
     `| MCP servers | ${wizard.summary.approvedMcpServers} |`,
     `| MCP packages | ${wizard.summary.approvedMcpPackages} |`,
+    `| MCP package scopes | ${wizard.summary.approvedMcpPackageScopes} |`,
     `| MCP commands | ${wizard.summary.approvedMcpCommands} |`,
     '',
     'Review steps:',
@@ -67,6 +70,7 @@ function collectMcpAllowlist(result) {
   const allowlist = {
     servers: [],
     packages: [],
+    packageScopes: [],
     commands: []
   };
 
@@ -81,12 +85,15 @@ function collectMcpAllowlist(result) {
       if (command) allowlist.commands.push(command);
       const packageSpec = findPackageSpec(command, arrayOfStrings(server.config.args));
       if (packageSpec) allowlist.packages.push(packageSpec);
+      const packageScope = packageScopeFromSpec(packageSpec);
+      if (packageScope) allowlist.packageScopes.push(packageScope);
     }
   }
 
   return {
     servers: uniqueSorted(allowlist.servers),
     packages: uniqueSorted(allowlist.packages),
+    packageScopes: uniqueSorted(allowlist.packageScopes),
     commands: uniqueSorted(allowlist.commands)
   };
 }
@@ -128,6 +135,12 @@ function stripJsonComments(text) {
 function findPackageSpec(command, args) {
   if (!mcpRunnerCommands.has(command)) return '';
   return args.find((arg) => !arg.startsWith('-') && !arg.includes('=')) || '';
+}
+
+function packageScopeFromSpec(packageSpec = '') {
+  if (!packageSpec.startsWith('@')) return '';
+  const slashIndex = packageSpec.indexOf('/');
+  return slashIndex === -1 ? '' : packageSpec.slice(0, slashIndex + 1);
 }
 
 function arrayOfStrings(value) {

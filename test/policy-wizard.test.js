@@ -19,6 +19,7 @@ test('builds a starter policy from scanned files and MCP configs', () => {
   assert.ok(wizard.config.policy.approvedMcpServers.includes('github'));
   assert.ok(wizard.config.policy.approvedMcpCommands.includes('npx'));
   assert.ok(wizard.config.policy.approvedMcpPackages.includes('@modelcontextprotocol/server-github@1.2.3'));
+  assert.ok(wizard.config.policy.approvedMcpPackageScopes.includes('@modelcontextprotocol/'));
 });
 
 test('CLI policy-wizard dry-run prints starter config and preserves existing config', () => {
@@ -36,6 +37,7 @@ test('CLI policy-wizard dry-run prints starter config and preserves existing con
           approvedFiles: ['README.md'],
           approvedMcpServers: [],
           approvedMcpPackages: [],
+          approvedMcpPackageScopes: [],
           approvedMcpCommands: []
         }
       },

@@ -480,6 +480,37 @@ test('keeps pinned MCP packages and prompted secrets quiet', () => {
   assert.deepEqual(findings, []);
 });
 
+test('reports MCP packages outside configured trusted package scopes', () => {
+  const findings = scanMcpConfigText(
+    `
+{
+  "mcpServers": {
+    "browser": {
+      "command": "npx",
+      "args": ["-y", "@unknown/mcp-browser@1.0.0"]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github@1.2.3"]
+    }
+  }
+}
+`,
+    '.mcp.json',
+    process.cwd(),
+    {
+      rules: {},
+      suppressions: { allow: true, allowedRules: [], minimumReasonLength: 10 },
+      policy: {
+        approvedMcpPackageScopes: ['@modelcontextprotocol/']
+      }
+    }
+  );
+
+  assert.equal(findings.some((finding) => finding.ruleId === 'AWG019' && /@unknown\/mcp-browser/.test(finding.evidence)), true);
+  assert.equal(findings.some((finding) => finding.ruleId === 'AWG019' && /server-github/.test(finding.evidence)), false);
+});
+
 test('discovers MCP config files alongside workflows', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'awguard-mcp-context-'));
   const vscodeDir = path.join(root, '.vscode');

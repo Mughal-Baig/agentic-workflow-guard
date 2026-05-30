@@ -1,6 +1,7 @@
 import process from 'node:process';
 import fs from 'node:fs';
 import path from 'node:path';
+import { applyAutofixPlan, buildAutofixPlan, renderAutofixPlan } from './autofix.js';
 import {
   applyBaseline,
   createBaseline,
@@ -41,7 +42,7 @@ import {
 const HELP = `Agentic Workflow Guard
 
 Usage:
-  awguard [path] [--config file] [--preset name] [--format text|json|markdown|github|sarif|graph|html|migration|score|badge|inventory|inventory-json] [--output file] [--baseline file] [--write-baseline file] [--fix-dry-run] [--fail-on none|low|medium|high|critical]
+  awguard [path] [--config file] [--preset name] [--format text|json|markdown|github|sarif|graph|html|migration|score|badge|inventory|inventory-json] [--output file] [--baseline file] [--write-baseline file] [--fix-dry-run] [--fix] [--fail-on none|low|medium|high|critical]
   awguard init
   awguard doctor [path] [--config file] [--preset name]
   awguard explain [AWG###]
@@ -75,6 +76,7 @@ Examples:
   awguard . --format score
   awguard . --format badge --output awguard-badge.json
   awguard . --fix-dry-run
+  awguard . --fix
   awguard . --format sarif --output awguard.sarif --fail-on none
   awguard . --write-baseline awguard.baseline.json
   awguard . --baseline awguard.baseline.json --fail-on high
@@ -188,7 +190,13 @@ export async function runCli(args, env = process.env) {
     console.error(`Wrote baseline ${baselineFile}`);
   }
 
-  const output = options.fixDryRun ? renderFixDryRun(result) : render(result, options.format);
+  if (options.fix) {
+    const plan = applyAutofixPlan(buildAutofixPlan(result));
+    console.log(renderAutofixPlan(plan, { applied: true }));
+    return;
+  }
+
+  const output = options.fixDryRun ? renderFixDryRun(result, { autofixPlan: buildAutofixPlan(result) }) : render(result, options.format);
 
   let outputFile = '';
   if (options.output) {
@@ -219,6 +227,7 @@ export function parseArgs(args, env = {}) {
     compare: [],
     presets: splitList(readInput(env, 'preset') || readInput(env, 'presets') || ''),
     fixDryRun: readBoolInput(env, 'fix_dry_run') || readBoolInput(env, 'fix-dry-run'),
+    fix: readBoolInput(env, 'fix'),
     help: false
   };
 
@@ -261,6 +270,8 @@ export function parseArgs(args, env = {}) {
       options.presets.push(...splitList(arg.slice('--preset='.length)));
     } else if (arg === '--fix-dry-run') {
       options.fixDryRun = true;
+    } else if (arg === '--fix') {
+      options.fix = true;
     } else if (!arg.startsWith('-')) {
       options.path = arg;
     } else {
