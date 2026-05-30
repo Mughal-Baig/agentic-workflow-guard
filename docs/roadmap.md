@@ -78,6 +78,8 @@ Current research points:
 - Shipped report gallery, rule authoring guide, npm trusted publishing guide, and release checklist.
 - Shipped npm trusted publishing workflow for tokenless OIDC publishing.
 - Shipped real-world pattern corpus for public demos and regression coverage.
+- Shipped VS Code task problem matcher and extension proof of concept.
+- Shipped local AWI trend dashboard proof of concept with sample history data.
 - Shipped `awguard.config.json` schema support.
 - Shipped stable schemas for machine-readable report outputs.
 - Shipped GitHub Actions job summaries.
@@ -94,6 +96,7 @@ Current research points:
 - Add richer policy ownership fields for approved file owners and review cadence.
 - Add screenshot automation for the report gallery and Marketplace listing.
 - Add more public corpus fixtures for popular agent PR review and triage patterns.
+- Turn the VS Code and dashboard POCs into installable, tested integrations.
 
 ### Later
 

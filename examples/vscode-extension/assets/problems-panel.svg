@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="430" viewBox="0 0 920 430" role="img" aria-labelledby="title desc">
+  <title id="title">AWGuard VS Code Problems panel capture</title>
+  <desc id="desc">A mocked VS Code Problems panel showing AWGuard diagnostics for AGENTS.md and an MCP config.</desc>
+  <rect width="920" height="430" fill="#f6f8fb"/>
+  <rect x="28" y="28" width="864" height="374" rx="8" fill="#ffffff" stroke="#d7dee8"/>
+  <rect x="28" y="28" width="864" height="42" rx="8" fill="#17212b"/>
+  <text x="50" y="55" font-family="Arial, sans-serif" font-size="15" fill="#ffffff" font-weight="700">AWGuard: Problems</text>
+  <rect x="50" y="92" width="820" height="44" rx="6" fill="#fff7ed" stroke="#fed7aa"/>
+  <circle cx="72" cy="114" r="8" fill="#b42318"/>
+  <text x="90" y="111" font-family="Arial, sans-serif" font-size="14" fill="#17212b" font-weight="700">AWG012 Agent instruction file weakens review or permission boundaries</text>
+  <text x="90" y="128" font-family="Arial, sans-serif" font-size="12" fill="#5f6b76">AGENTS.md:3 - persistent instruction bypasses approval checks</text>
+  <rect x="50" y="148" width="820" height="44" rx="6" fill="#fff7ed" stroke="#fed7aa"/>
+  <circle cx="72" cy="170" r="8" fill="#b42318"/>
+  <text x="90" y="167" font-family="Arial, sans-serif" font-size="14" fill="#17212b" font-weight="700">AWG014 MCP config hardcodes secrets or auth material</text>
+  <text x="90" y="184" font-family="Arial, sans-serif" font-size="12" fill="#5f6b76">.mcp.json:7 - move tokens into prompt input or managed secrets</text>
+  <rect x="50" y="204" width="820" height="44" rx="6" fill="#eef8ff" stroke="#bfdbfe"/>
+  <circle cx="72" cy="226" r="8" fill="#0f766e"/>
+  <text x="90" y="223" font-family="Arial, sans-serif" font-size="14" fill="#17212b" font-weight="700">AWGuard scan completed</text>
+  <text x="90" y="240" font-family="Arial, sans-serif" font-size="12" fill="#5f6b76">2 diagnostics published to the VS Code Problems panel</text>
+  <rect x="50" y="282" width="820" height="78" rx="6" fill="#0c1117"/>
+  <text x="72" y="312" font-family="Menlo, Consolas, monospace" font-size="13" fill="#9ae6b4">$ npx awguard@latest . --format json --fail-on none</text>
+  <text x="72" y="334" font-family="Menlo, Consolas, monospace" font-size="13" fill="#c9d1d9">Scanned 6 file(s). Findings: 2 total, highest severity: critical.</text>
+</svg>

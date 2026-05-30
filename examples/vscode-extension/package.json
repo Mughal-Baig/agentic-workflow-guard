@@ -1,0 +1,68 @@
+{
+  "name": "awguard-vscode-poc",
+  "displayName": "AWGuard POC",
+  "description": "Run Agentic Workflow Guard from VS Code and show findings as diagnostics.",
+  "version": "0.0.1",
+  "publisher": "mughal-baig",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.101.0"
+  },
+  "categories": [
+    "Linters",
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:awguard.scanWorkspace"
+  ],
+  "main": "./src/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "awguard.scanWorkspace",
+        "title": "AWGuard: Scan Workspace"
+      }
+    ],
+    "configuration": {
+      "title": "AWGuard",
+      "properties": {
+        "awguard.command": {
+          "type": "string",
+          "default": "npx",
+          "description": "Command used to run AWGuard."
+        },
+        "awguard.args": {
+          "type": "array",
+          "default": ["awguard@latest"],
+          "items": {
+            "type": "string"
+          },
+          "description": "Arguments prepended before the workspace path and output flags."
+        }
+      }
+    },
+    "problemMatchers": [
+      {
+        "name": "awguard",
+        "owner": "awguard",
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": [
+          {
+            "regexp": "^\\[(?:CRITICAL|HIGH|MEDIUM|LOW)\\] (AWG\\d+) (.*)$",
+            "severity": "warning",
+            "code": 1,
+            "message": 2
+          },
+          {
+            "regexp": "^\\s+(.+):(\\d+)$",
+            "file": 1,
+            "line": 2
+          }
+        ]
+      }
+    ]
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.101.0"
+  }
+}

@@ -10,6 +10,8 @@
 - `pr-comment-bot.yml`: safe starter workflow for PR comments without `pull_request_target`.
 - `lab/`: vulnerable and fixed mini-repositories for demos.
 - `corpus/`: real-world pattern corpus for unsafe agent workflows, instructions, prompts, Cursor rules, and MCP configs.
+- `vscode-extension/`: minimal VS Code extension POC for command palette scans and diagnostics.
+- `dashboard/`: local dashboard POC for AWI score and finding trends.
 - `.gitlab-ci.yml`, `pre-commit-config.yaml`, `.vscode/tasks.json`: adoption examples for other workflows.
 
 Try:

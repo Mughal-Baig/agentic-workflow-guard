@@ -525,6 +525,8 @@ See [docs/comparison.md](docs/comparison.md) for how AWGuard fits beside `zizmor
 - [Rule authoring](docs/rule-authoring.md): how to add high-signal AWGuard rules and fixtures.
 - [npm publishing](docs/npm-publishing.md): trusted publishing, OIDC, and provenance setup.
 - [Release checklist](docs/release-checklist.md): Marketplace screenshots, package checks, and release steps.
+- [VS Code extension POC](examples/vscode-extension/README.md): command palette scan, diagnostics, and `$awguard` problem matcher.
+- [Dashboard POC](examples/dashboard/README.md): local trend dashboard for AWI score, findings, and agentic surface growth.
 
 ## Example Corpus
 

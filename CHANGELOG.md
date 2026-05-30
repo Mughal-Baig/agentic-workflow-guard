@@ -25,6 +25,8 @@
 - Add expanded comparison, setup recipe, report gallery, rule authoring, release checklist, and npm trusted publishing docs.
 - Add a trusted publishing GitHub Actions workflow for tokenless npm releases.
 - Add a real-world pattern corpus for unsafe agent workflow, prompt, instruction, Cursor rule, and MCP examples.
+- Add VS Code task, problem matcher, and extension proof-of-concept assets.
+- Add a local dashboard proof of concept for AWI score and finding trends.
 
 ## 1.6.0
 

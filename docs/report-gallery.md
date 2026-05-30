@@ -134,6 +134,23 @@ Best for:
 - Scheduled drift monitoring.
 - Baseline cleanup work.
 
+## Dashboard POC
+
+Use to show AWI score, finding count, introduced/resolved findings, and agentic surface growth over time.
+
+```bash
+cd examples/dashboard
+python3 -m http.server 8090
+```
+
+Open `http://127.0.0.1:8090/`.
+
+Best for:
+
+- GitHub App dashboard planning.
+- GitHub Pages demos.
+- Organization-level trend conversations.
+
 ## Policy Wizard
 
 Use to generate a starter allowlist for reviewed agentic surfaces.

@@ -47,6 +47,8 @@ Use this Action before adding AI agents, custom prompts, or MCP tools to a repos
 4. Migration plan from `node ./bin/awguard.js examples/lab/unsafe --format migration`.
 5. GitHub Code Scanning page after SARIF upload.
 6. Policy wizard output from `node ./bin/awguard.js policy-wizard examples/corpus --dry-run`.
+7. Dashboard POC from `examples/dashboard`.
+8. VS Code Problems panel from `examples/vscode-extension`.
 
 ## Docs To Link
 

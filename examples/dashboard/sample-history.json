@@ -1,0 +1,53 @@
+{
+  "repository": "Mughal-Baig/agentic-workflow-guard",
+  "runs": [
+    {
+      "date": "2026-05-24",
+      "commit": "7aa31c1",
+      "score": 42,
+      "grade": "D",
+      "findings": 18,
+      "highest": "critical",
+      "introduced": 7,
+      "resolved": 0,
+      "surfaces": 5,
+      "topRules": ["AWG001", "AWG004", "AWG005"]
+    },
+    {
+      "date": "2026-05-26",
+      "commit": "94f4d20",
+      "score": 68,
+      "grade": "C",
+      "findings": 10,
+      "highest": "high",
+      "introduced": 2,
+      "resolved": 10,
+      "surfaces": 7,
+      "topRules": ["AWG012", "AWG013", "AWG015"]
+    },
+    {
+      "date": "2026-05-28",
+      "commit": "3869b59",
+      "score": 86,
+      "grade": "B",
+      "findings": 4,
+      "highest": "medium",
+      "introduced": 1,
+      "resolved": 7,
+      "surfaces": 9,
+      "topRules": ["AWG015", "AWG016"]
+    },
+    {
+      "date": "2026-05-30",
+      "commit": "0d95be2",
+      "score": 100,
+      "grade": "A",
+      "findings": 0,
+      "highest": "none",
+      "introduced": 0,
+      "resolved": 4,
+      "surfaces": 7,
+      "topRules": []
+    }
+  ]
+}

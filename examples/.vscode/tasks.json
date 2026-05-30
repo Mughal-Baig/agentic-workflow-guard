@@ -11,7 +11,23 @@
       "label": "awguard scan",
       "type": "shell",
       "command": "npx awguard@latest . --fail-on high",
-      "problemMatcher": []
+      "problemMatcher": {
+        "owner": "awguard",
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": [
+          {
+            "regexp": "^\\[(?:CRITICAL|HIGH|MEDIUM|LOW)\\] (AWG\\d+) (.*)$",
+            "severity": "warning",
+            "code": 1,
+            "message": 2
+          },
+          {
+            "regexp": "^\\s+(.+):(\\d+)$",
+            "file": 1,
+            "line": 2
+          }
+        ]
+      }
     }
   ]
 }
