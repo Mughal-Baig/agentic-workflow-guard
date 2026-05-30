@@ -6,6 +6,9 @@
 - Add `awguard explain AWG###` for rule-level explanations and remediation guidance.
 - Add `awguard badges` to print copyable README badge snippets.
 - Add `awguard demo` for an offline unsafe-to-fixed vulnerable lab walkthrough.
+- Add `awguard templates` for GitHub Actions, code scanning, GitLab CI, pre-commit, and VS Code snippets.
+- Add `awguard policy-pack` for OSS, strict, and enterprise policy starter configs.
+- Add `scan.include` and `scan.exclude` config globs for narrowing discovered scan files.
 - Add `schemas/awguard.config.schema.json` for editor validation of AWGuard config files.
 - Add schemas for JSON scan reports, inventories, comparisons, baselines, and badge endpoints.
 - Add compare report surface diffs and `--compare ... --format json`.

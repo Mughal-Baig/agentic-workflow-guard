@@ -1,6 +1,10 @@
 {
   "$schema": "https://raw.githubusercontent.com/Mughal-Baig/agentic-workflow-guard/main/schemas/awguard.config.schema.json",
   "extends": ["strict"],
+  "scan": {
+    "include": [".github/workflows/*", "AGENTS.md", ".github/agents/*", ".github/prompts/*", ".mcp.json"],
+    "exclude": ["node_modules/*", "dist/*", "build/*"]
+  },
   "rules": {
     "AWG010": "off",
     "AWG008": "low",

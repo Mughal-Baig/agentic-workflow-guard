@@ -61,6 +61,9 @@ Current research points:
 - Shipped `awguard explain`.
 - Shipped `awguard badges`.
 - Shipped `awguard demo`.
+- Shipped `awguard templates`.
+- Shipped `awguard policy-pack`.
+- Shipped `scan.include` and `scan.exclude` config globs.
 - Shipped `awguard.config.json` schema support.
 - Shipped stable schemas for machine-readable report outputs.
 - Shipped GitHub Actions job summaries.

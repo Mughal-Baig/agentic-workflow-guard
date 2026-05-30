@@ -34,7 +34,8 @@ export function normalizeConfig(rawConfig = {}, source = 'config') {
   return {
     rules: normalizeRules(mergedConfig.rules || {}, source),
     suppressions: normalizeSuppressions(mergedConfig.suppressions || {}, source),
-    policy: normalizePolicy(mergedConfig.policy || {}, source)
+    policy: normalizePolicy(mergedConfig.policy || {}, source),
+    scan: normalizeScan(mergedConfig.scan || {}, source)
   };
 }
 
@@ -53,7 +54,8 @@ function mergePresetConfigs(rawConfig, source) {
   return mergeConfigObjects(merged, {
     rules: rawConfig.rules || {},
     suppressions: rawConfig.suppressions || {},
-    policy: rawConfig.policy || {}
+    policy: rawConfig.policy || {},
+    scan: rawConfig.scan || {}
   });
 }
 
@@ -70,6 +72,10 @@ function mergeConfigObjects(base, override) {
     policy: {
       ...(base.policy || {}),
       ...(override.policy || {})
+    },
+    scan: {
+      ...(base.scan || {}),
+      ...(override.scan || {})
     }
   };
 }
@@ -165,6 +171,17 @@ function normalizePolicy(policy, source) {
     approvedMcpServers: normalizeStringArray(policy.approvedMcpServers || [], `${source} policy.approvedMcpServers`),
     approvedMcpPackages: normalizeStringArray(policy.approvedMcpPackages || [], `${source} policy.approvedMcpPackages`),
     approvedMcpCommands: normalizeStringArray(policy.approvedMcpCommands || [], `${source} policy.approvedMcpCommands`)
+  };
+}
+
+function normalizeScan(scan, source) {
+  if (!isObject(scan)) {
+    throw new Error(`${source} scan must be an object`);
+  }
+
+  return {
+    include: normalizeStringArray(scan.include || [], `${source} scan.include`),
+    exclude: normalizeStringArray(scan.exclude || [], `${source} scan.exclude`)
   };
 }
 

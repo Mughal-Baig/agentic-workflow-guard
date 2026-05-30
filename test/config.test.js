@@ -69,6 +69,18 @@ test('normalizes policy allowlists', () => {
   assert.deepEqual(config.policy.approvedMcpCommands, ['npx']);
 });
 
+test('normalizes scan include and exclude globs', () => {
+  const config = normalizeConfig({
+    scan: {
+      include: ['.github/workflows/*', 'AGENTS.md'],
+      exclude: ['node_modules/*']
+    }
+  });
+
+  assert.deepEqual(config.scan.include, ['.github/workflows/*', 'AGENTS.md']);
+  assert.deepEqual(config.scan.exclude, ['node_modules/*']);
+});
+
 test('rejects malformed policy allowlists', () => {
   assert.throws(
     () =>
@@ -78,6 +90,18 @@ test('rejects malformed policy allowlists', () => {
         }
       }),
     /policy.approvedFiles must be an array/
+  );
+});
+
+test('rejects malformed scan globs', () => {
+  assert.throws(
+    () =>
+      normalizeConfig({
+        scan: {
+          include: '.github/workflows/*'
+        }
+      }),
+    /scan.include must be an array/
   );
 });
 

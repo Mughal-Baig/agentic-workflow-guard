@@ -187,7 +187,7 @@ export const ruleCatalog = {
 export function scanWorkflows({ root = process.cwd(), config = {} } = {}) {
   const absoluteRoot = path.resolve(root);
   const relativeBase = fs.statSync(absoluteRoot).isFile() ? path.dirname(absoluteRoot) : absoluteRoot;
-  const files = discoverScanFiles(absoluteRoot);
+  const files = filterScanFiles(discoverScanFiles(absoluteRoot), relativeBase, config.scan || {});
   const findings = files.flatMap((file) => scanFile(file, relativeBase, config));
 
   findings.sort((a, b) => {
@@ -357,6 +357,18 @@ function discoverScanFiles(root) {
   files.push(...discoverAgentInstructionFiles(root));
   files.push(...discoverMcpConfigFiles(root));
   return [...new Set(files)].sort();
+}
+
+function filterScanFiles(files, root, scan) {
+  const include = scan.include || [];
+  const exclude = scan.exclude || [];
+
+  return files.filter((file) => {
+    const relativeFile = path.relative(root, file).split(path.sep).join('/') || path.basename(file);
+    const included = include.length === 0 || matchesAnyWildcardPattern(relativeFile, include);
+    const excluded = exclude.length > 0 && matchesAnyWildcardPattern(relativeFile, exclude);
+    return included && !excluded;
+  });
 }
 
 function walk(dir) {
@@ -1282,6 +1294,10 @@ function isPlainObject(value) {
 }
 
 function matchesAnyPolicyPattern(value, patterns) {
+  return matchesAnyWildcardPattern(value, patterns);
+}
+
+function matchesAnyWildcardPattern(value, patterns) {
   return patterns.some((pattern) => wildcardToRegExp(pattern).test(value));
 }
 

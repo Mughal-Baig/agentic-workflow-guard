@@ -144,6 +144,8 @@ awguard doctor [path] [--config file] [--preset name]
 awguard explain [AWG###]
 awguard badges [--repo OWNER/REPO] [--branch main] [--badge-file docs/awguard-badge.json] [--site URL]
 awguard demo
+awguard templates [all|github|code-scanning|gitlab|pre-commit|vscode]
+awguard policy-pack [oss|strict|enterprise]
 awguard --compare previous.json current.json
 ```
 
@@ -154,6 +156,8 @@ node ./bin/awguard.js doctor
 node ./bin/awguard.js explain AWG013
 node ./bin/awguard.js badges --repo Mughal-Baig/agentic-workflow-guard --site https://mughal-baig.github.io/agentic-workflow-guard/
 node ./bin/awguard.js demo
+node ./bin/awguard.js templates github
+node ./bin/awguard.js policy-pack strict
 node ./bin/awguard.js examples/unsafe-agent.yml
 node ./bin/awguard.js . --config awguard.config.json
 node ./bin/awguard.js . --preset strict --format graph
@@ -197,6 +201,10 @@ Agentic Workflow Guard automatically loads `awguard.config.json` or `.awguard.js
 ```json
 {
   "$schema": "https://raw.githubusercontent.com/Mughal-Baig/agentic-workflow-guard/main/schemas/awguard.config.schema.json",
+  "scan": {
+    "include": [".github/workflows/*", "AGENTS.md", ".mcp.json"],
+    "exclude": ["node_modules/*", "dist/*", "build/*"]
+  },
   "rules": {
     "AWG010": "off",
     "AWG008": "low",
@@ -214,6 +222,22 @@ Agentic Workflow Guard automatically loads `awguard.config.json` or `.awguard.js
 Rule values can be `"off"`, `"low"`, `"medium"`, `"high"`, or `"critical"`.
 See `examples/awguard.config.example.json` for a complete template.
 The config schema is published at `schemas/awguard.config.schema.json` for editor completion and validation.
+
+Generate starter policy packs:
+
+```bash
+node ./bin/awguard.js policy-pack oss
+node ./bin/awguard.js policy-pack strict
+node ./bin/awguard.js policy-pack enterprise
+```
+
+Generate CI and editor templates:
+
+```bash
+node ./bin/awguard.js templates all
+node ./bin/awguard.js templates code-scanning
+node ./bin/awguard.js templates pre-commit
+```
 
 Built-in presets:
 

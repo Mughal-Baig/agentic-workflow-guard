@@ -71,6 +71,20 @@
         }
       }
     },
+    "scan": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "include": {
+          "$ref": "#/$defs/stringList",
+          "description": "Optional glob-style file patterns that narrow discovered AWGuard scan files."
+        },
+        "exclude": {
+          "$ref": "#/$defs/stringList",
+          "description": "Optional glob-style file patterns removed from discovered AWGuard scan files."
+        }
+      }
+    },
     "policy": {
       "type": "object",
       "additionalProperties": false,

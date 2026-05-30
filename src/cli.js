@@ -9,8 +9,10 @@ import { loadConfig } from './config.js';
 import { buildDoctorReport, renderDoctorReport } from './doctor.js';
 import { renderRuleExplanation } from './explain.js';
 import { renderInitGuide } from './init.js';
+import { renderPolicyPack } from './policy-packs.js';
 import { renderFixDryRun } from './remediation.js';
 import { scanWorkflows, severityRank } from './scanner.js';
+import { renderTemplates } from './templates.js';
 import {
   renderBadge,
   renderGithubAnnotations,
@@ -36,6 +38,8 @@ Usage:
   awguard explain [AWG###]
   awguard badges [--repo OWNER/REPO] [--branch main] [--badge-file docs/awguard-badge.json] [--site URL]
   awguard demo
+  awguard templates [all|github|code-scanning|gitlab|pre-commit|vscode]
+  awguard policy-pack [oss|strict|enterprise]
   awguard --compare previous.json current.json
 
 Examples:
@@ -44,6 +48,8 @@ Examples:
   awguard explain AWG001
   awguard badges --repo OWNER/REPO --site https://OWNER.github.io/REPO/
   awguard demo
+  awguard templates github
+  awguard policy-pack strict
   awguard .
   awguard .mcp.json
   awguard . --config awguard.config.json
@@ -94,6 +100,16 @@ export async function runCli(args, env = process.env) {
 
   if (args[0] === 'demo') {
     console.log(renderDemoWalkthrough());
+    return;
+  }
+
+  if (args[0] === 'templates') {
+    console.log(renderTemplates(args[1] || 'all'));
+    return;
+  }
+
+  if (args[0] === 'policy-pack') {
+    console.log(renderPolicyPack(args[1] || 'oss'));
     return;
   }
 
