@@ -1,4 +1,5 @@
 {
+  "$schema": "https://raw.githubusercontent.com/Mughal-Baig/agentic-workflow-guard/main/schemas/awguard.config.schema.json",
   "extends": ["strict"],
   "rules": {
     "AWG010": "off",

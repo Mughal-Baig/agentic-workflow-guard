@@ -40,6 +40,8 @@ export function renderInitGuide({ actionRef = 'v0' } = {}) {
     '```json',
     JSON.stringify(
       {
+        $schema:
+          'https://raw.githubusercontent.com/Mughal-Baig/agentic-workflow-guard/main/schemas/awguard.config.schema.json',
         extends: ['strict'],
         policy: {
           approvedFiles: ['AGENTS.md', '.github/workflows/*'],

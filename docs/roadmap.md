@@ -57,6 +57,9 @@ Current research points:
 - Shipped `--format inventory`.
 - Shipped `--format inventory-json`.
 - Shipped `awguard init`.
+- Shipped `awguard doctor`.
+- Shipped `awguard.config.json` schema support.
+- Shipped GitHub Actions job summaries.
 - Shipped `--compare previous.json current.json`.
 - Shipped first policy allowlists with `AWG015`.
 - Expanded `AWG012` coverage to Copilot custom agents, prompts, and skills.

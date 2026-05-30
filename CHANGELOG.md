@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Add `awguard doctor` for setup, config, scan target, schema, and GitHub Actions summary checks.
+- Add `schemas/awguard.config.schema.json` for editor validation of AWGuard config files.
+- Add automatic GitHub Actions job summaries with scan metrics and top findings.
+
 ## 1.6.0
 
 - Add `awguard init` to print starter GitHub Action, strict config, baseline, report, and badge setup snippets.

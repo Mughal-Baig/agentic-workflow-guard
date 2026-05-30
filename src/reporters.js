@@ -222,6 +222,61 @@ export function renderGithubAnnotations(result) {
   return result.findings.map((finding) => formatAnnotation(finding)).join('\n');
 }
 
+export function renderGithubStepSummary(result, { format = 'github', failOn = 'high', outputFile = '' } = {}) {
+  const lines = [
+    '## Agentic Workflow Guard',
+    '',
+    '| Metric | Value |',
+    '| --- | --- |',
+    `| Scanned files | ${result.scannedFiles.length} |`,
+    `| Findings | ${result.summary.total} |`,
+    `| Highest severity | ${escapeMarkdown(result.summary.highest)} |`,
+    `| Output format | ${escapeMarkdown(format)} |`,
+    `| Fail threshold | ${escapeMarkdown(failOn)} |`
+  ];
+
+  if (result.summary.baseline) {
+    lines.push(`| Baseline | ${result.summary.baseline.new} new, ${result.summary.baseline.known} known |`);
+  }
+
+  if (outputFile) {
+    lines.push(`| Report file | \`${escapeMarkdown(outputFile)}\` |`);
+  }
+
+  lines.push('');
+
+  if (result.scannedFiles.length === 0) {
+    lines.push('No GitHub Actions workflow, agent instruction, or MCP config files were found.');
+  } else if (result.findings.length === 0) {
+    lines.push('No findings. The scanned agentic surfaces are clean for the enabled rules.');
+  } else {
+    lines.push('### Top Findings', '');
+    lines.push('| Severity | Rule | Location | Finding |');
+    lines.push('| --- | --- | --- | --- |');
+    for (const finding of result.findings.slice(0, 10)) {
+      lines.push(
+        `| ${escapeMarkdown(finding.severity)} | ${escapeMarkdown(finding.ruleId)} | \`${escapeMarkdown(
+          `${finding.file}:${finding.line}`
+        )}\` | ${escapeMarkdown(finding.title)} |`
+      );
+    }
+    if (result.findings.length > 10) {
+      lines.push('', `Showing 10 of ${result.findings.length} findings.`);
+    }
+  }
+
+  lines.push(
+    '',
+    '### Useful Follow-Ups',
+    '',
+    '- Run `npx awguard@latest . --format inventory` to map agentic surfaces.',
+    '- Run `npx awguard@latest . --format score` to generate an AWI scorecard.',
+    '- Run `npx awguard@latest . --fix-dry-run` for remediation guidance.'
+  );
+
+  return lines.join('\n');
+}
+
 function formatAnnotation(finding) {
   const command = finding.severity === 'low' || finding.severity === 'medium' ? 'warning' : 'error';
   const title = `${finding.ruleId} ${finding.title}`;

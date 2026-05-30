@@ -51,6 +51,12 @@ Generate a starter config, GitHub Action, baseline command, and badge snippet:
 npx awguard init
 ```
 
+Check your local setup, config discovery, scan target, and GitHub Actions summary support:
+
+```bash
+npx awguard doctor
+```
+
 ## Use In GitHub Actions
 
 After you upload this repository to GitHub, users can add:
@@ -76,6 +82,8 @@ jobs:
           preset: strict
           fail-on: high
 ```
+
+When AWGuard runs inside GitHub Actions it also writes a job summary with scanned file count, finding count, highest severity, top findings, and follow-up commands.
 
 To adopt the scanner without breaking CI on old findings, commit a baseline file and use:
 
@@ -124,12 +132,14 @@ jobs:
 ```bash
 awguard [path] [--config file] [--preset name] [--format text|json|markdown|github|sarif|graph|html|migration|score|badge|inventory|inventory-json] [--output file] [--baseline file] [--write-baseline file] [--fix-dry-run] [--fail-on none|low|medium|high|critical]
 awguard init
+awguard doctor [path] [--config file] [--preset name]
 awguard --compare previous.json current.json
 ```
 
 Examples:
 
 ```bash
+node ./bin/awguard.js doctor
 node ./bin/awguard.js examples/unsafe-agent.yml
 node ./bin/awguard.js . --config awguard.config.json
 node ./bin/awguard.js . --preset strict --format graph
@@ -172,6 +182,7 @@ Agentic Workflow Guard automatically loads `awguard.config.json` or `.awguard.js
 
 ```json
 {
+  "$schema": "https://raw.githubusercontent.com/Mughal-Baig/agentic-workflow-guard/main/schemas/awguard.config.schema.json",
   "rules": {
     "AWG010": "off",
     "AWG008": "low",
@@ -188,6 +199,7 @@ Agentic Workflow Guard automatically loads `awguard.config.json` or `.awguard.js
 
 Rule values can be `"off"`, `"low"`, `"medium"`, `"high"`, or `"critical"`.
 See `examples/awguard.config.example.json` for a complete template.
+The config schema is published at `schemas/awguard.config.schema.json` for editor completion and validation.
 
 Built-in presets:
 

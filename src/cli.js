@@ -4,6 +4,7 @@ import path from 'node:path';
 import { applyBaseline, createBaseline, loadBaseline, writeBaseline } from './baseline.js';
 import { loadReport, renderComparison } from './compare.js';
 import { loadConfig } from './config.js';
+import { buildDoctorReport, renderDoctorReport } from './doctor.js';
 import { renderInitGuide } from './init.js';
 import { renderFixDryRun } from './remediation.js';
 import { scanWorkflows, severityRank } from './scanner.js';
@@ -11,6 +12,7 @@ import {
   renderBadge,
   renderGithubAnnotations,
   renderGraph,
+  renderGithubStepSummary,
   renderHtml,
   renderJson,
   renderMarkdown,
@@ -27,10 +29,12 @@ const HELP = `Agentic Workflow Guard
 Usage:
   awguard [path] [--config file] [--preset name] [--format text|json|markdown|github|sarif|graph|html|migration|score|badge|inventory|inventory-json] [--output file] [--baseline file] [--write-baseline file] [--fix-dry-run] [--fail-on none|low|medium|high|critical]
   awguard init
+  awguard doctor [path] [--config file] [--preset name]
   awguard --compare previous.json current.json
 
 Examples:
   awguard init
+  awguard doctor
   awguard .
   awguard .mcp.json
   awguard . --config awguard.config.json
@@ -53,6 +57,19 @@ Examples:
 export async function runCli(args, env = process.env) {
   if (args[0] === 'init') {
     console.log(renderInitGuide());
+    return;
+  }
+
+  if (args[0] === 'doctor') {
+    const options = parseArgs(args.slice(1), env);
+    const report = buildDoctorReport({
+      root: options.path,
+      configPath: options.config,
+      presets: options.presets,
+      env
+    });
+    console.log(renderDoctorReport(report));
+    if (report.status === 'fail') process.exitCode = 1;
     return;
   }
 
@@ -88,12 +105,15 @@ export async function runCli(args, env = process.env) {
 
   const output = options.fixDryRun ? renderFixDryRun(result) : render(result, options.format);
 
+  let outputFile = '';
   if (options.output) {
-    const outputFile = writeOutput(options.output, output);
+    outputFile = writeOutput(options.output, output);
     console.error(`Wrote ${outputFile}`);
   } else if (output.trim().length > 0) {
     console.log(output);
   }
+
+  writeGithubStepSummary({ env, result, options, outputFile });
 
   const findingsToFailOn = result.findings.filter((finding) => finding.baselineState !== 'known');
   if (shouldFail(findingsToFailOn, options.failOn)) {
@@ -222,6 +242,19 @@ function writeOutput(file, output) {
   fs.mkdirSync(path.dirname(absoluteFile), { recursive: true });
   fs.writeFileSync(absoluteFile, output);
   return absoluteFile;
+}
+
+function writeGithubStepSummary({ env, result, options, outputFile }) {
+  if (env.GITHUB_ACTIONS !== 'true' || !env.GITHUB_STEP_SUMMARY) return;
+
+  try {
+    fs.appendFileSync(
+      env.GITHUB_STEP_SUMMARY,
+      `${renderGithubStepSummary(result, { format: options.format, failOn: options.failOn, outputFile })}\n`
+    );
+  } catch (error) {
+    console.error(`awguard: could not write GitHub job summary: ${error.message}`);
+  }
 }
 
 function shouldFail(findings, threshold) {

@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Mughal-Baig/agentic-workflow-guard/main/schemas/awguard.config.schema.json",
+  "title": "Agentic Workflow Guard configuration",
+  "description": "Configuration for AWGuard rule severities, presets, suppression policy, and reviewed agentic surface allowlists.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "extends": {
+      "description": "Built-in preset name or list of preset names to merge before local settings.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/preset"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/preset"
+          },
+          "uniqueItems": true
+        }
+      ]
+    },
+    "rules": {
+      "type": "object",
+      "description": "Rule severity overrides. Use \"off\" to disable a rule.",
+      "additionalProperties": false,
+      "patternProperties": {
+        "^AWG(00[1-9]|01[0-5])$": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ruleSeverity"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["severity"],
+              "properties": {
+                "severity": {
+                  "$ref": "#/$defs/ruleSeverity"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "suppressions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allow": {
+          "type": "boolean",
+          "description": "Set false to report every awguard-disable comment as invalid."
+        },
+        "allowedRules": {
+          "type": "array",
+          "description": "Optional list of rule IDs that may be suppressed inline.",
+          "items": {
+            "$ref": "#/$defs/ruleId"
+          },
+          "uniqueItems": true
+        },
+        "minimumReasonLength": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Minimum characters required after the suppression reason separator."
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "approvedFiles": {
+          "$ref": "#/$defs/stringList",
+          "description": "Reviewed workflow, instruction, prompt, skill, and MCP config files. Glob-style * suffixes are supported by AWGuard."
+        },
+        "approvedMcpServers": {
+          "$ref": "#/$defs/stringList",
+          "description": "Reviewed MCP server names."
+        },
+        "approvedMcpPackages": {
+          "$ref": "#/$defs/stringList",
+          "description": "Reviewed MCP package or container specs, preferably pinned to exact versions or digests."
+        },
+        "approvedMcpCommands": {
+          "$ref": "#/$defs/stringList",
+          "description": "Reviewed MCP launch commands such as node, npx, uvx, or docker."
+        }
+      }
+    }
+  },
+  "$defs": {
+    "preset": {
+      "type": "string",
+      "enum": ["strict", "claude-code", "codex", "aider", "triage-bot"]
+    },
+    "ruleId": {
+      "type": "string",
+      "enum": [
+        "AWG001",
+        "AWG002",
+        "AWG003",
+        "AWG004",
+        "AWG005",
+        "AWG006",
+        "AWG007",
+        "AWG008",
+        "AWG009",
+        "AWG010",
+        "AWG011",
+        "AWG012",
+        "AWG013",
+        "AWG014",
+        "AWG015"
+      ]
+    },
+    "ruleSeverity": {
+      "type": "string",
+      "enum": ["off", "low", "medium", "high", "critical"]
+    },
+    "stringList": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    }
+  }
+}

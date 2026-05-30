@@ -12,6 +12,7 @@ test('renders init setup guide', () => {
   assert.match(guide, /Agentic Workflow Guard Setup/);
   assert.match(guide, /awguard.config.json/);
   assert.match(guide, /awguard.baseline.json/);
+  assert.match(guide, /awguard.config.schema.json/);
 });
 
 test('CLI init prints setup guide without scanning a path', () => {
