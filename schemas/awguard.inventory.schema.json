@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Mughal-Baig/agentic-workflow-guard/main/schemas/awguard.inventory.schema.json",
+  "title": "Agentic Workflow Guard inventory report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["root", "summary", "surfaces", "files", "recommendations"],
+  "properties": {
+    "root": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scannedFiles", "surfaces", "findings", "highest"],
+      "properties": {
+        "scannedFiles": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "surfaces": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "findings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "highest": {
+          "$ref": "#/$defs/severity"
+        }
+      }
+    },
+    "surfaces": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/surface"
+      }
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/file"
+      }
+    },
+    "recommendations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "$defs": {
+    "severity": {
+      "type": "string",
+      "enum": ["none", "low", "medium", "high", "critical"]
+    },
+    "surfaceName": {
+      "type": "string",
+      "enum": ["github-workflow", "agent-context", "mcp-config", "other"]
+    },
+    "ruleIdList": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^AWG[0-9]{3}$"
+      },
+      "uniqueItems": true
+    },
+    "surface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["surface", "label", "files", "findings", "highest", "rules"],
+      "properties": {
+        "surface": {
+          "$ref": "#/$defs/surfaceName"
+        },
+        "label": {
+          "type": "string"
+        },
+        "files": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "findings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "highest": {
+          "$ref": "#/$defs/severity"
+        },
+        "rules": {
+          "$ref": "#/$defs/ruleIdList"
+        }
+      }
+    },
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "surface", "label", "findings", "highest", "rules"],
+      "properties": {
+        "file": {
+          "type": "string"
+        },
+        "surface": {
+          "$ref": "#/$defs/surfaceName"
+        },
+        "label": {
+          "type": "string"
+        },
+        "findings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "highest": {
+          "$ref": "#/$defs/severity"
+        },
+        "rules": {
+          "$ref": "#/$defs/ruleIdList"
+        }
+      }
+    }
+  }
+}

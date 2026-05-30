@@ -62,8 +62,10 @@ Current research points:
 - Shipped `awguard badges`.
 - Shipped `awguard demo`.
 - Shipped `awguard.config.json` schema support.
+- Shipped stable schemas for machine-readable report outputs.
 - Shipped GitHub Actions job summaries.
 - Shipped `--compare previous.json current.json`.
+- Shipped agentic surface diffs in compare reports.
 - Shipped first policy allowlists with `AWG015`.
 - Expanded `AWG012` coverage to Copilot custom agents, prompts, and skills.
 - Added Docker, GitLab CI, pre-commit, VS Code task, Marketplace, comparison, visual demo, and vulnerable lab assets.

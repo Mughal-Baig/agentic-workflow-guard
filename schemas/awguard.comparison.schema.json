@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Mughal-Baig/agentic-workflow-guard/main/schemas/awguard.comparison.schema.json",
+  "title": "Agentic Workflow Guard comparison report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "summary",
+    "introducedFindings",
+    "resolvedFindings",
+    "addedFiles",
+    "removedFiles",
+    "addedSurfaces",
+    "removedSurfaces"
+  ],
+  "properties": {
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "previousFindings",
+        "currentFindings",
+        "introducedFindings",
+        "resolvedFindings",
+        "unchangedFindings",
+        "addedFiles",
+        "removedFiles",
+        "addedSurfaces",
+        "removedSurfaces"
+      ],
+      "properties": {
+        "previousFindings": {
+          "$ref": "#/$defs/count"
+        },
+        "currentFindings": {
+          "$ref": "#/$defs/count"
+        },
+        "introducedFindings": {
+          "$ref": "#/$defs/count"
+        },
+        "resolvedFindings": {
+          "$ref": "#/$defs/count"
+        },
+        "unchangedFindings": {
+          "$ref": "#/$defs/count"
+        },
+        "addedFiles": {
+          "$ref": "#/$defs/count"
+        },
+        "removedFiles": {
+          "$ref": "#/$defs/count"
+        },
+        "addedSurfaces": {
+          "$ref": "#/$defs/count"
+        },
+        "removedSurfaces": {
+          "$ref": "#/$defs/count"
+        }
+      }
+    },
+    "introducedFindings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/finding"
+      }
+    },
+    "resolvedFindings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/finding"
+      }
+    },
+    "addedFiles": {
+      "$ref": "#/$defs/fileList"
+    },
+    "removedFiles": {
+      "$ref": "#/$defs/fileList"
+    },
+    "addedSurfaces": {
+      "$ref": "#/$defs/surfaceList"
+    },
+    "removedSurfaces": {
+      "$ref": "#/$defs/surfaceList"
+    }
+  },
+  "$defs": {
+    "count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "fileList": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "surfaceList": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["surface", "label", "files"],
+        "properties": {
+          "surface": {
+            "type": "string",
+            "enum": ["github-workflow", "agent-context", "mcp-config", "other"]
+          },
+          "label": {
+            "type": "string"
+          },
+          "files": {
+            "$ref": "#/$defs/fileList"
+          }
+        }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["ruleId", "severity", "file", "line", "title"],
+      "properties": {
+        "ruleId": {
+          "type": "string",
+          "pattern": "^AWG[0-9]{3}$"
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "critical"]
+        },
+        "file": {
+          "type": "string"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "title": {
+          "type": "string"
+        },
+        "fingerprint": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

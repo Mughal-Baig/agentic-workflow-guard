@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Mughal-Baig/agentic-workflow-guard/main/schemas/awguard.report.schema.json",
+  "title": "Agentic Workflow Guard JSON report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["root", "scannedFiles", "summary", "findings"],
+  "properties": {
+    "root": {
+      "type": "string"
+    },
+    "scannedFiles": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "summary": {
+      "$ref": "#/$defs/summary"
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/finding"
+      }
+    }
+  },
+  "$defs": {
+    "severity": {
+      "type": "string",
+      "enum": ["none", "low", "medium", "high", "critical"]
+    },
+    "ruleId": {
+      "type": "string",
+      "pattern": "^AWG[0-9]{3}$"
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["total", "highest"],
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "highest": {
+          "$ref": "#/$defs/severity"
+        },
+        "bySeverity": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "baseline": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["new", "known"],
+          "properties": {
+            "new": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "known": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ruleId", "title", "severity", "file", "line", "message", "suggestion"],
+      "properties": {
+        "ruleId": {
+          "$ref": "#/$defs/ruleId"
+        },
+        "title": {
+          "type": "string"
+        },
+        "severity": {
+          "$ref": "#/$defs/severity"
+        },
+        "file": {
+          "type": "string"
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "message": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": ["string", "null"]
+        },
+        "suggestion": {
+          "type": "string"
+        },
+        "fingerprint": {
+          "type": ["string", "null"]
+        },
+        "baselineState": {
+          "type": ["string", "null"],
+          "enum": ["new", "known", null]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Mughal-Baig/agentic-workflow-guard/main/schemas/awguard.badge.schema.json",
+  "title": "Agentic Workflow Guard Shields badge endpoint",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["schemaVersion", "label", "message", "color"],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "label": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "color": {
+      "type": "string"
+    },
+    "namedLogo": {
+      "type": "string"
+    }
+  }
+}

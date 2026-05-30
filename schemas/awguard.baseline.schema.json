@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/Mughal-Baig/agentic-workflow-guard/main/schemas/awguard.baseline.schema.json",
+  "title": "Agentic Workflow Guard baseline",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "findings"],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["fingerprint", "ruleId", "file", "line", "title"],
+        "properties": {
+          "fingerprint": {
+            "type": "string"
+          },
+          "ruleId": {
+            "type": "string",
+            "pattern": "^AWG[0-9]{3}$"
+          },
+          "file": {
+            "type": "string"
+          },
+          "line": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

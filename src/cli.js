@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { applyBaseline, createBaseline, loadBaseline, writeBaseline } from './baseline.js';
 import { renderBadgeSnippets } from './badges.js';
-import { loadReport, renderComparison } from './compare.js';
+import { loadReport, renderComparison, renderComparisonJson } from './compare.js';
 import { renderDemoWalkthrough } from './demo.js';
 import { loadConfig } from './config.js';
 import { buildDoctorReport, renderDoctorReport } from './doctor.js';
@@ -105,7 +105,9 @@ export async function runCli(args, env = process.env) {
   }
 
   if (options.compare.length > 0) {
-    const output = renderComparison(loadReport(options.compare[0]), loadReport(options.compare[1]));
+    const previous = loadReport(options.compare[0]);
+    const current = loadReport(options.compare[1]);
+    const output = options.format === 'json' ? renderComparisonJson(previous, current) : renderComparison(previous, current);
     if (options.output) {
       const outputFile = writeOutput(options.output, output);
       console.error(`Wrote ${outputFile}`);

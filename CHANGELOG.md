@@ -7,6 +7,8 @@
 - Add `awguard badges` to print copyable README badge snippets.
 - Add `awguard demo` for an offline unsafe-to-fixed vulnerable lab walkthrough.
 - Add `schemas/awguard.config.schema.json` for editor validation of AWGuard config files.
+- Add schemas for JSON scan reports, inventories, comparisons, baselines, and badge endpoints.
+- Add compare report surface diffs and `--compare ... --format json`.
 - Add automatic GitHub Actions job summaries with scan metrics and top findings.
 
 ## 1.6.0

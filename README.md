@@ -310,9 +310,12 @@ Track newly introduced agentic risk across branches or releases:
 ```bash
 node ./bin/awguard.js . --format json --output current-awguard.json
 node ./bin/awguard.js --compare previous-awguard.json current-awguard.json
+node ./bin/awguard.js --compare previous-awguard.json current-awguard.json --format json
 ```
 
-The comparison report shows introduced findings, resolved findings, added scanned files, and removed scanned files.
+The comparison report shows introduced findings, resolved findings, added scanned files, removed scanned files, and agentic surface drift by workflows, agent context files, MCP configs, and other scanned files.
+
+Machine-readable report schemas are documented in [docs/schemas.md](docs/schemas.md).
 
 ## Policy Mode
 
