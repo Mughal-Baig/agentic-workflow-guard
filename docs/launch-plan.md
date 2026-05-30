@@ -68,12 +68,21 @@ Short pitch:
    ```
 
 18. Explain the new hook: "This scanner checks repo-provided MCP tool wiring without executing the MCP server."
+19. Show the real-world corpus:
+
+   ```bash
+   node ./bin/awguard.js examples/corpus --format inventory
+   ```
+
+20. Explain that visitors can clone the repo and see high-signal findings immediately, without needing a real vulnerable project.
 
 ## Release Checklist
 
-- Publish GitHub release notes for `v1.0.0`.
+- Use `docs/release-checklist.md` for the release gate.
+- Use `docs/report-gallery.md` for screenshot commands.
+- Publish GitHub release notes for the target version.
 - Add the action to GitHub Marketplace from the release UI.
-- Publish the npm package as `awguard`; do not use `agentic-workflow-guard` because that npm name is already controlled by another maintainer.
+- Publish the npm package as `awguard` with trusted publishing when possible.
 - Pin the README demo to the attack graph, not the rule table.
 - Post with the headline: "I built a scanner that maps and migrates Agentic Workflow Injection in GitHub Actions."
 - Include the AWI attack chain screenshot in social posts.
@@ -81,6 +90,7 @@ Short pitch:
 - Include the AWI risk badge as the final screenshot because it is the easiest artifact for other maintainers to copy.
 - Include a short "workflow looked safe, AGENTS.md made it unsafe" example because it is the most surprising hook.
 - Include a short "MCP config looked like developer tooling, but it gave the agent a mutable tool server and a token" example because MCP is the hottest adjacent security topic.
+- Include the setup recipes link so Claude Code, Codex, Cursor, Copilot, and Cline users have an immediate next step.
 
 ## Distribution Targets
 

@@ -1,0 +1,13 @@
+name: Unsafe PR Target Checkout
+
+on:
+  pull_request_target:
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - run: claude --prompt "Review ${{ github.event.pull_request.title }}"

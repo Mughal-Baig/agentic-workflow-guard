@@ -518,6 +518,25 @@ JSON and SARIF outputs also include a stable `remediationCode` such as `permissi
 
 See [docs/comparison.md](docs/comparison.md) for how AWGuard fits beside `zizmor`, `actionlint`, OpenSSF Scorecard, secret scanners, and MCP runtime scanners.
 
+## Adoption Docs
+
+- [Setup recipes](docs/setup-recipes.md): Claude Code, Codex, Cursor, GitHub Copilot, Cline, and safe PR comment bots.
+- [Report gallery](docs/report-gallery.md): text, GitHub annotations, SARIF, inventory, attack graph, HTML, migration, score, badge, compare, and policy wizard outputs.
+- [Rule authoring](docs/rule-authoring.md): how to add high-signal AWGuard rules and fixtures.
+- [npm publishing](docs/npm-publishing.md): trusted publishing, OIDC, and provenance setup.
+- [Release checklist](docs/release-checklist.md): Marketplace screenshots, package checks, and release steps.
+
+## Example Corpus
+
+The [real-world pattern corpus](examples/corpus/README.md) contains intentionally unsafe fixtures for PR review agents, `pull_request_target`, persistent instructions, reusable prompts, Cursor rules, and MCP configs.
+
+Run it locally:
+
+```bash
+node ./bin/awguard.js examples/corpus --format inventory
+node ./bin/awguard.js examples/corpus --format migration
+```
+
 ## Example Finding
 
 ```text
@@ -532,18 +551,14 @@ See [docs/comparison.md](docs/comparison.md) for how AWGuard fits beside `zizmor
 - Safe autofix for low-risk permission changes.
 - Safe-output migration patch previews for common triage and review bots.
 - Hosted AWI score API for dynamic cross-repository badges.
-- Agent instruction file rule packs for Copilot, Claude Code, Codex, Gemini, Cursor, and Windsurf.
-- MCP config rule packs for Claude Code, Copilot, VS Code, Cursor, Windsurf, Cline, and Roo.
-- Policy mode for approved MCP packages, actions, token scopes, and agent context files.
 - Agent capability SBOM for prompts, tools, MCP servers, permissions, and write paths.
 - Trend reports that show newly added agent surfaces and newly introduced findings.
 - GitHub App integration for always-on repository monitoring.
-- Rule packs for Claude Code, Codex, Gemini, Copilot, Aider, and custom agents.
-- Public vulnerable workflow lab with attack and fix walkthroughs.
+- VS Code task and extension proof of concept.
 
 ## Contributing And Security
 
-Contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md), and report sensitive security issues using [SECURITY.md](SECURITY.md).
+Contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/rule-authoring.md](docs/rule-authoring.md), and report sensitive security issues using [SECURITY.md](SECURITY.md).
 
 ## Research Backing
 

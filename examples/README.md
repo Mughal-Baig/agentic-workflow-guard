@@ -9,11 +9,14 @@
 - `awguard.config.example.json`: sample config with a strict preset and overrides.
 - `pr-comment-bot.yml`: safe starter workflow for PR comments without `pull_request_target`.
 - `lab/`: vulnerable and fixed mini-repositories for demos.
+- `corpus/`: real-world pattern corpus for unsafe agent workflows, instructions, prompts, Cursor rules, and MCP configs.
 - `.gitlab-ci.yml`, `pre-commit-config.yaml`, `.vscode/tasks.json`: adoption examples for other workflows.
 
 Try:
 
 ```bash
+node ../bin/awguard.js corpus --format inventory
+node ../bin/awguard.js corpus --format migration
 node ../bin/awguard.js unsafe-agent.yml --format graph
 node ../bin/awguard.js unsafe-agent.yml --format html --output awguard-report.html
 node ../bin/awguard.js unsafe-agent.yml --format migration

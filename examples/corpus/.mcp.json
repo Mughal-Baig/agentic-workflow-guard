@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "ghp_fakeTokenForDocsOnly1234567890"
+      }
+    },
+    "filesystem": {
+      "command": "docker",
+      "args": ["run", "--rm", "example/mcp-filesystem:latest"]
+    }
+  }
+}

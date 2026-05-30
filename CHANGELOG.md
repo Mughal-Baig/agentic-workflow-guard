@@ -22,6 +22,9 @@
 - Add schemas for JSON scan reports, inventories, comparisons, baselines, and badge endpoints.
 - Add compare report surface diffs and `--compare ... --format json`.
 - Add automatic GitHub Actions job summaries with scan metrics and top findings.
+- Add expanded comparison, setup recipe, report gallery, rule authoring, release checklist, and npm trusted publishing docs.
+- Add a trusted publishing GitHub Actions workflow for tokenless npm releases.
+- Add a real-world pattern corpus for unsafe agent workflow, prompt, instruction, Cursor rule, and MCP examples.
 
 ## 1.6.0
 

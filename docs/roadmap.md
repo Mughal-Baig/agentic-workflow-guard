@@ -73,6 +73,11 @@ Current research points:
 - Shipped baseline review/prune command.
 - Shipped policy wizard starter config command.
 - Shipped PR comment bot example and Docker image publish workflow.
+- Shipped expanded comparison docs for `zizmor`, `actionlint`, OpenSSF Scorecard, secret scanning, and MCP runtime scanners.
+- Shipped setup recipes for Claude Code, Codex, Cursor, GitHub Copilot, and Cline.
+- Shipped report gallery, rule authoring guide, npm trusted publishing guide, and release checklist.
+- Shipped npm trusted publishing workflow for tokenless OIDC publishing.
+- Shipped real-world pattern corpus for public demos and regression coverage.
 - Shipped `awguard.config.json` schema support.
 - Shipped stable schemas for machine-readable report outputs.
 - Shipped GitHub Actions job summaries.
@@ -87,9 +92,10 @@ Current research points:
 - Add agent capability SBOM export for prompts, tools, MCP servers, permissions, and write paths.
 - Add safer patch previews for common workflow permission fixes.
 - Add richer policy ownership fields for approved file owners and review cadence.
+- Add screenshot automation for the report gallery and Marketplace listing.
+- Add more public corpus fixtures for popular agent PR review and triage patterns.
 
 ### Later
 
 - Add trend reports for "new agent surface introduced" diffs.
-- Build the vulnerable lab and screenshot-friendly walkthroughs.
 - Explore a GitHub App after the CLI and Action adoption path is stable.
