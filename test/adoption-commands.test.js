@@ -5,6 +5,7 @@ import path from 'node:path';
 import { renderBadgeSnippets } from '../src/badges.js';
 import { renderDemoWalkthrough } from '../src/demo.js';
 import { renderRuleExplanation } from '../src/explain.js';
+import { ruleCatalog } from '../src/scanner.js';
 
 const bin = path.resolve('bin', 'awguard.js');
 
@@ -14,7 +15,15 @@ test('renders rule explanation and rule index', () => {
 
   assert.match(rule, /AWG001: Untrusted text reaches an AI agent prompt/);
   assert.match(rule, /Why it matters/);
-  assert.match(index, /AWG015/);
+  assert.match(rule, /Remediation code: `prompt\.isolate-untrusted-text`/);
+  assert.match(index, /Remediation Code/);
+  assert.match(index, /AWG018/);
+});
+
+test('every rule has a machine-readable remediation code', () => {
+  for (const [ruleId, rule] of Object.entries(ruleCatalog)) {
+    assert.match(rule.remediationCode, /^[a-z][a-z0-9.-]*$/, `${ruleId} has a stable remediation code`);
+  }
 });
 
 test('CLI explain prints a rule explanation', () => {

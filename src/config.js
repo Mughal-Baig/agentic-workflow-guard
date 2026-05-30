@@ -181,8 +181,19 @@ function normalizeScan(scan, source) {
 
   return {
     include: normalizeStringArray(scan.include || [], `${source} scan.include`),
-    exclude: normalizeStringArray(scan.exclude || [], `${source} scan.exclude`)
+    exclude: normalizeStringArray(scan.exclude || [], `${source} scan.exclude`),
+    maxFiles: normalizeOptionalPositiveInteger(scan.maxFiles, `${source} scan.maxFiles`),
+    maxFileBytes: normalizeOptionalPositiveInteger(scan.maxFileBytes, `${source} scan.maxFileBytes`)
   };
+}
+
+function normalizeOptionalPositiveInteger(value, source) {
+  if (value === undefined || value === null || value === '') return undefined;
+  const number = Number(value);
+  if (!Number.isInteger(number) || number < 1) {
+    throw new Error(`${source} must be a positive integer`);
+  }
+  return number;
 }
 
 function normalizeStringArray(value, source) {

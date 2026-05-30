@@ -73,12 +73,16 @@ test('normalizes scan include and exclude globs', () => {
   const config = normalizeConfig({
     scan: {
       include: ['.github/workflows/*', 'AGENTS.md'],
-      exclude: ['node_modules/*']
+      exclude: ['node_modules/*'],
+      maxFiles: '25',
+      maxFileBytes: 1024
     }
   });
 
   assert.deepEqual(config.scan.include, ['.github/workflows/*', 'AGENTS.md']);
   assert.deepEqual(config.scan.exclude, ['node_modules/*']);
+  assert.equal(config.scan.maxFiles, 25);
+  assert.equal(config.scan.maxFileBytes, 1024);
 });
 
 test('rejects malformed policy allowlists', () => {
@@ -102,6 +106,18 @@ test('rejects malformed scan globs', () => {
         }
       }),
     /scan.include must be an array/
+  );
+});
+
+test('rejects malformed scan limits', () => {
+  assert.throws(
+    () =>
+      normalizeConfig({
+        scan: {
+          maxFiles: 0
+        }
+      }),
+    /scan.maxFiles must be a positive integer/
   );
 });
 

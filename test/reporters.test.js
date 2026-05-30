@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
-import { renderGithubStepSummary, renderSarif } from '../src/reporters.js';
+import { renderGithubStepSummary, renderJson, renderSarif } from '../src/reporters.js';
 import { scanWorkflowText } from '../src/scanner.js';
 
 const bin = path.resolve('bin', 'awguard.js');
@@ -43,8 +43,19 @@ jobs:
   );
   assert.equal(sarif.runs[0].results[0].fingerprints['awguard/v1'], sarif.runs[0].results[0].partialFingerprints.primaryLocationLineHash);
   assert.ok(sarif.runs[0].results[0].properties.baselineState);
+  assert.equal(sarif.runs[0].results[0].properties.remediationCode, 'prompt.isolate-untrusted-text');
   assert.equal(sarif.runs[0].tool.driver.rules[0].helpUri, 'https://github.com/Mughal-Baig/agentic-workflow-guard#rule-reference');
   assert.ok(sarif.runs[0].tool.driver.rules[0].properties.tags.includes('prompt-injection'));
+
+  const json = JSON.parse(
+    renderJson({
+      root: process.cwd(),
+      scannedFiles: ['agent.yml'],
+      summary: { total: findings.length, highest: 'high', bySeverity: {} },
+      findings
+    })
+  );
+  assert.equal(json.findings[0].remediationCode, 'prompt.isolate-untrusted-text');
 });
 
 test('renders GitHub job summary markdown', () => {

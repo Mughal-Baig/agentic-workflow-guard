@@ -107,108 +107,126 @@ export const ruleCatalog = {
   AWG001: {
     title: 'Untrusted text reaches an AI agent prompt',
     severity: 'high',
+    remediationCode: 'prompt.isolate-untrusted-text',
     suggestion:
       'Keep issue, PR, comment, and branch text out of privileged agent prompts unless it is reviewed, delimited, and sanitized. Run the agent with read-only permissions by default.'
   },
   AWG002: {
     title: 'Untrusted GitHub context is interpolated in a shell script',
     severity: 'high',
+    remediationCode: 'shell.quote-github-context',
     suggestion:
       'Move the expression into an env variable and reference the shell variable with quotes, or pass the value to a JavaScript action as an argument.'
   },
   AWG003: {
     title: 'pull_request_target checks out untrusted pull request code',
     severity: 'critical',
+    remediationCode: 'checkout.avoid-pr-head',
     suggestion:
       'Use pull_request for untrusted builds, or keep pull_request_target limited to base-repository metadata work without checking out head SHA/ref.'
   },
   AWG004: {
     title: 'AI agent workflow has broad token permissions',
     severity: 'high',
+    remediationCode: 'permissions.tighten-token',
     suggestion:
       'Set permissions to read-all or the smallest write scope required. Add manual approval before any agent can write code, comments, labels, or releases.'
   },
   AWG005: {
     title: 'Secrets are exposed in an untrusted agent workflow',
     severity: 'high',
+    remediationCode: 'secrets.split-privileged-workflow',
     suggestion:
       'Do not provide repository, cloud, or model-provider secrets to workflows driven by untrusted issue/PR/comment text. Split privileged work into a separate approved workflow.'
   },
   AWG006: {
     title: 'Autonomous agent runs with unsafe approval flags',
     severity: 'high',
+    remediationCode: 'agent.require-approval',
     suggestion:
       'Remove full-auto or skip-permission flags in CI. Require a human approval gate before tool use, file writes, command execution, or repository changes.'
   },
   AWG007: {
     title: 'Model or agent output may be executed by a script',
     severity: 'high',
+    remediationCode: 'output.validate-before-exec',
     suggestion:
       'Treat model output as data. Write it to a file, validate it, and apply narrow parsers instead of eval, bash -c, sh -c, or pipe-to-shell patterns.'
   },
   AWG008: {
     title: 'Agent workflow does not declare permissions',
     severity: 'medium',
+    remediationCode: 'permissions.declare-readonly',
     suggestion:
       'Declare explicit permissions, usually contents: read for analysis workflows. Escalate write scopes only in a separate, reviewed job.'
   },
   AWG009: {
     title: 'workflow_run consumes artifacts before script execution',
     severity: 'medium',
+    remediationCode: 'artifact.verify-provenance',
     suggestion:
       'Treat artifacts from earlier workflows as untrusted. Verify provenance and contents before using them in privileged workflow_run jobs.'
   },
   AWG010: {
     title: 'Third-party action is not pinned to a commit SHA',
     severity: 'low',
+    remediationCode: 'actions.pin-sha',
     suggestion:
       'Pin third-party actions to a full commit SHA in security-sensitive agent workflows, and review the action before updating the pin.'
   },
   AWG011: {
     title: 'Invalid suppression comment',
     severity: 'medium',
+    remediationCode: 'suppression.add-justification',
     suggestion:
       'Use awguard-disable-next-line or awguard-disable-line with rule ids and a clear reason after --, for example: # awguard-disable-next-line AWG001 -- reviewed false positive.'
   },
   AWG012: {
     title: 'Agent instruction file weakens review or permission boundaries',
     severity: 'high',
+    remediationCode: 'instructions.harden-agent-boundary',
     suggestion:
       'Keep AGENTS.md, CLAUDE.md, GEMINI.md, Copilot instructions, and other persistent agent instruction files conservative. Do not tell agents to bypass approvals, follow untrusted issue/PR text as commands, or expose secrets.'
   },
   AWG013: {
     title: 'MCP config starts mutable or shell-based tool servers',
     severity: 'high',
+    remediationCode: 'mcp.pin-server',
     suggestion:
       'Pin MCP server packages to exact versions or container digests, avoid shell wrappers, and review project-scoped MCP servers before agents can use them.'
   },
   AWG014: {
     title: 'MCP config hardcodes secrets or auth material',
     severity: 'critical',
+    remediationCode: 'mcp.prompt-secrets',
     suggestion:
       'Move MCP credentials into input prompts, environment variables, or a secret manager. Do not commit bearer tokens, API keys, passwords, or auth headers in MCP config files.'
   },
   AWG015: {
     title: 'Agentic surface is not approved by policy',
     severity: 'medium',
+    remediationCode: 'policy.allowlist-reviewed-surface',
     suggestion:
       'Add the workflow, agent context file, MCP config, MCP server, package, or command to the policy allowlist only after review. Otherwise remove or harden it.'
   },
   AWG016: {
     title: 'Checkout credentials persist into an agent workflow',
     severity: 'high',
+    remediationCode: 'checkout.disable-persisted-credentials',
     suggestion:
       'Set actions/checkout persist-credentials: false in agent jobs with write tokens, or split checkout and writeback into separate reviewed jobs.'
   },
   AWG017: {
     title: 'Agent writeback lacks branch or PR containment',
     severity: 'critical',
+    remediationCode: 'writeback.use-pr-branch',
     suggestion:
       'Write agent changes to an isolated branch, draft pull request, or artifact. Do not let autonomous agent jobs push directly to protected branches.'
   },
   AWG018: {
     title: 'Untrusted event text reaches MCP tool inputs or environment',
     severity: 'high',
+    remediationCode: 'mcp.sanitize-untrusted-input',
     suggestion:
       'Keep issue, PR, branch, comment, and workflow_dispatch input text out of MCP tool arguments and environment variables unless it is reviewed and sanitized.'
   }
@@ -217,7 +235,7 @@ export const ruleCatalog = {
 export function scanWorkflows({ root = process.cwd(), config = {} } = {}) {
   const absoluteRoot = path.resolve(root);
   const relativeBase = fs.statSync(absoluteRoot).isFile() ? path.dirname(absoluteRoot) : absoluteRoot;
-  const files = filterScanFiles(discoverScanFiles(absoluteRoot), relativeBase, config.scan || {});
+  const files = enforceScanLimits(filterScanFiles(discoverScanFiles(absoluteRoot), relativeBase, config.scan || {}), config.scan || {});
   const findings = files.flatMap((file) => scanFile(file, relativeBase, config));
 
   findings.sort((a, b) => {
@@ -353,6 +371,12 @@ export function classifyScanFile(file, root = process.cwd()) {
 }
 
 function scanFile(file, root, config) {
+  const maxFileBytes = config.scan?.maxFileBytes;
+  if (maxFileBytes && fs.statSync(file).size > maxFileBytes) {
+    const relativeFile = path.relative(root, file).split(path.sep).join('/') || path.basename(file);
+    throw new Error(`${relativeFile} is larger than scan.maxFileBytes (${maxFileBytes}). Exclude it or raise the limit.`);
+  }
+
   const text = fs.readFileSync(file, 'utf8');
   let findings;
   if (isAgentInstructionFile(file, root)) {
@@ -402,6 +426,16 @@ function filterScanFiles(files, root, scan) {
     const excluded = exclude.length > 0 && matchesAnyWildcardPattern(relativeFile, exclude);
     return included && !excluded;
   });
+}
+
+function enforceScanLimits(files, scan) {
+  if (scan.maxFiles && files.length > scan.maxFiles) {
+    throw new Error(
+      `scan matched ${files.length} files, above scan.maxFiles (${scan.maxFiles}). Narrow scan.include/scan.exclude or raise the limit.`
+    );
+  }
+
+  return files;
 }
 
 function walk(dir) {
@@ -808,6 +842,7 @@ function addFinding(context, ruleId, line, overrides = {}) {
     column: overrides.column || findEvidenceColumn(context.lines[line - 1], overrides.evidence),
     message: overrides.message || docs.title,
     evidence: overrides.evidence || '',
+    remediationCode: docs.remediationCode,
     suggestion: overrides.suggestion || docs.suggestion
   };
 

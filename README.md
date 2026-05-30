@@ -203,7 +203,9 @@ Agentic Workflow Guard automatically loads `awguard.config.json` or `.awguard.js
   "$schema": "https://raw.githubusercontent.com/Mughal-Baig/agentic-workflow-guard/main/schemas/awguard.config.schema.json",
   "scan": {
     "include": [".github/workflows/*", "AGENTS.md", ".mcp.json"],
-    "exclude": ["node_modules/*", "dist/*", "build/*"]
+    "exclude": ["node_modules/*", "dist/*", "build/*"],
+    "maxFiles": 250,
+    "maxFileBytes": 262144
   },
   "rules": {
     "AWG010": "off",
@@ -222,6 +224,7 @@ Agentic Workflow Guard automatically loads `awguard.config.json` or `.awguard.js
 Rule values can be `"off"`, `"low"`, `"medium"`, `"high"`, or `"critical"`.
 See `examples/awguard.config.example.json` for a complete template.
 The config schema is published at `schemas/awguard.config.schema.json` for editor completion and validation.
+`scan.maxFiles` and `scan.maxFileBytes` are optional guardrails for very large repositories; leave them out if you do not want hard limits.
 
 Generate starter policy packs:
 
@@ -451,6 +454,8 @@ If you omit rule ids, the suppression applies to all findings on the target line
 | AWG016 | High | Checkout credentials persisting in elevated agent workflows |
 | AWG017 | Critical | Agent writeback without branch, PR, or artifact containment |
 | AWG018 | High/Critical | Untrusted GitHub event text passed into MCP tool inputs or environment |
+
+JSON and SARIF outputs also include a stable `remediationCode` such as `permissions.tighten-token`, `mcp.pin-server`, or `writeback.use-pr-branch`. Use these codes for dashboards, routing, and automation that should not depend on free-text suggestions.
 
 ## How It Compares
 

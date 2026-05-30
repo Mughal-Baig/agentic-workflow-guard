@@ -12,6 +12,9 @@
 - Add `AWG016`, `AWG017`, and `AWG018` for checkout credentials, unsafe agent writeback, and MCP input injection.
 - Improve SARIF metadata with stable AWGuard fingerprints, categories, snippets, and columns.
 - Move the JavaScript GitHub Action runtime and bundled workflow templates to Node 24-ready actions.
+- Add machine-readable remediation codes to JSON and SARIF findings.
+- Add scan guardrails for maximum discovered files and maximum scanned file size.
+- Add end-to-end golden tests for unsafe/fixed labs, compare, inventory, and score outputs.
 - Add `schemas/awguard.config.schema.json` for editor validation of AWGuard config files.
 - Add schemas for JSON scan reports, inventories, comparisons, baselines, and badge endpoints.
 - Add compare report surface diffs and `--compare ... --format json`.

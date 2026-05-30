@@ -3,7 +3,9 @@
   "extends": ["strict"],
   "scan": {
     "include": [".github/workflows/*", "AGENTS.md", ".github/agents/*", ".github/prompts/*", ".mcp.json"],
-    "exclude": ["node_modules/*", "dist/*", "build/*"]
+    "exclude": ["node_modules/*", "dist/*", "build/*"],
+    "maxFiles": 250,
+    "maxFileBytes": 262144
   },
   "rules": {
     "AWG010": "off",

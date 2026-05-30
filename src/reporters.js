@@ -64,6 +64,7 @@ export function renderJson(result) {
         column: finding.column,
         message: finding.message,
         evidence: finding.evidence,
+        remediationCode: finding.remediationCode,
         suggestion: finding.suggestion,
         fingerprint: finding.fingerprint,
         baselineState: finding.baselineState
@@ -147,6 +148,7 @@ export function renderSarif(result) {
             properties: {
               severity: finding.severity,
               baselineState: finding.baselineState,
+              remediationCode: finding.remediationCode,
               evidence: finding.evidence
             }
           }))

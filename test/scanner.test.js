@@ -592,3 +592,51 @@ jobs:
   assert.deepEqual(result.scannedFiles.map((file) => path.relative(root, file)), ['.github/workflows/agent.yml']);
   assert.equal(result.findings.length, 0);
 });
+
+test('scan guardrails cap discovered files and individual file size', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'awguard-scan-guard-'));
+  fs.mkdirSync(path.join(root, '.github', 'workflows'), { recursive: true });
+  fs.writeFileSync(path.join(root, '.github', 'workflows', 'one.yml'), 'on: [push]\njobs:\n  test:\n    steps:\n      - run: echo ok\n');
+  fs.writeFileSync(path.join(root, '.github', 'workflows', 'two.yml'), 'on: [push]\njobs:\n  test:\n    steps:\n      - run: echo ok\n');
+
+  assert.throws(
+    () =>
+      scanWorkflows({
+        root,
+        config: {
+          scan: {
+            maxFiles: 1
+          }
+        }
+      }),
+    /above scan\.maxFiles/
+  );
+
+  assert.throws(
+    () =>
+      scanWorkflows({
+        root: path.join(root, '.github', 'workflows', 'one.yml'),
+        config: {
+          scan: {
+            maxFileBytes: 10
+          }
+        }
+      }),
+    /larger than scan\.maxFileBytes/
+  );
+});
+
+test('large dependency trees are not traversed during discovery', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'awguard-large-repo-'));
+  fs.mkdirSync(path.join(root, '.github', 'workflows'), { recursive: true });
+  fs.mkdirSync(path.join(root, 'node_modules', 'generated'), { recursive: true });
+  fs.writeFileSync(path.join(root, '.github', 'workflows', 'agent.yml'), 'on: [push]\njobs:\n  test:\n    steps:\n      - run: echo ok\n');
+
+  for (let index = 0; index < 200; index += 1) {
+    fs.writeFileSync(path.join(root, 'node_modules', 'generated', `ignored-${index}.yml`), 'on: [issue_comment]\n');
+  }
+
+  const result = scanWorkflows({ root });
+
+  assert.deepEqual(result.scannedFiles.map((file) => path.relative(root, file)), ['.github/workflows/agent.yml']);
+});

@@ -75,6 +75,21 @@ const ruleDetails = {
     detects: 'Agentic files, MCP servers, packages, or commands outside configured policy allowlists.',
     why: 'New agent surfaces should be visible in review before they gain trust.',
     safePattern: 'Approve only reviewed files, servers, packages, and commands.'
+  },
+  AWG016: {
+    detects: 'actions/checkout credentials persisting in elevated agent workflows.',
+    why: 'Persisted checkout credentials can give later agent or shell steps repository write access.',
+    safePattern: 'Use persist-credentials: false and keep writeback in a separate reviewed job.'
+  },
+  AWG017: {
+    detects: 'Agent jobs with write permissions that commit, tag, publish, or push without a reviewable boundary.',
+    why: 'Autonomous writeback can change protected repository state before a maintainer reviews the result.',
+    safePattern: 'Push to an isolated branch, open a draft pull request, or upload artifacts for a human apply step.'
+  },
+  AWG018: {
+    detects: 'Untrusted GitHub event text flowing into MCP tool arguments or environment variables.',
+    why: 'MCP tools can bridge prompt input into external systems, so injected text can become tool instructions.',
+    safePattern: 'Treat event text as untrusted data, sanitize it, and require review before passing it to MCP tools.'
   }
 };
 
@@ -92,6 +107,8 @@ export function renderRuleExplanation(ruleId = '') {
     `# ${normalizedRuleId}: ${rule.title}`,
     '',
     `Severity: **${rule.severity}**`,
+    '',
+    `Remediation code: \`${rule.remediationCode}\``,
     '',
     `Detects: ${details.detects || rule.title}`,
     '',
@@ -112,9 +129,9 @@ export function renderRuleExplanation(ruleId = '') {
 }
 
 function renderRuleIndex() {
-  const lines = ['# Agentic Workflow Guard Rules', '', '| Rule | Severity | Title |', '| --- | --- | --- |'];
+  const lines = ['# Agentic Workflow Guard Rules', '', '| Rule | Severity | Remediation Code | Title |', '| --- | --- | --- | --- |'];
   for (const [ruleId, rule] of Object.entries(ruleCatalog)) {
-    lines.push(`| ${ruleId} | ${rule.severity} | ${escapeMarkdown(rule.title)} |`);
+    lines.push(`| ${ruleId} | ${rule.severity} | \`${rule.remediationCode}\` | ${escapeMarkdown(rule.title)} |`);
   }
   lines.push('', 'Run `awguard explain AWG001` for details about one rule.');
   return lines.join('\n');

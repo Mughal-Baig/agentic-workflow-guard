@@ -82,6 +82,16 @@
         "exclude": {
           "$ref": "#/$defs/stringList",
           "description": "Optional glob-style file patterns removed from discovered AWGuard scan files."
+        },
+        "maxFiles": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Optional cap on the number of discovered scan files."
+        },
+        "maxFileBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Optional cap on the byte size of each scanned file."
         }
       }
     },

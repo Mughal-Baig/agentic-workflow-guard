@@ -101,6 +101,10 @@
         "evidence": {
           "type": ["string", "null"]
         },
+        "remediationCode": {
+          "type": ["string", "null"],
+          "pattern": "^[a-z][a-z0-9.-]*$"
+        },
         "suggestion": {
           "type": "string"
         },

@@ -67,6 +67,9 @@ Current research points:
 - Shipped Node 24 action runtime readiness.
 - Shipped SARIF columns, snippets, stable AWGuard fingerprints, and rule categories.
 - Shipped `AWG016`, `AWG017`, and `AWG018` for checkout credentials, unsafe writeback, and MCP input injection.
+- Shipped machine-readable remediation codes.
+- Shipped large-repo scan guardrails.
+- Shipped end-to-end golden tests for lab, compare, inventory, and score outputs.
 - Shipped `awguard.config.json` schema support.
 - Shipped stable schemas for machine-readable report outputs.
 - Shipped GitHub Actions job summaries.
