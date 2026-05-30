@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.7.0 - 2026-05-30
+
 - Add `awguard doctor` for setup, config, scan target, schema, and GitHub Actions summary checks.
 - Add `awguard explain AWG###` for rule-level explanations and remediation guidance.
 - Add `awguard badges` to print copyable README badge snippets.
