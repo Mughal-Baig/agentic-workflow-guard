@@ -70,6 +70,9 @@ Current research points:
 - Shipped machine-readable remediation codes.
 - Shipped large-repo scan guardrails.
 - Shipped end-to-end golden tests for lab, compare, inventory, and score outputs.
+- Shipped baseline review/prune command.
+- Shipped policy wizard starter config command.
+- Shipped PR comment bot example and Docker image publish workflow.
 - Shipped `awguard.config.json` schema support.
 - Shipped stable schemas for machine-readable report outputs.
 - Shipped GitHub Actions job summaries.

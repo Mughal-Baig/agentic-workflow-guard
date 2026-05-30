@@ -1,7 +1,15 @@
 import process from 'node:process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { applyBaseline, createBaseline, loadBaseline, writeBaseline } from './baseline.js';
+import {
+  applyBaseline,
+  createBaseline,
+  loadBaseline,
+  pruneBaseline,
+  renderBaselineReview,
+  reviewBaseline,
+  writeBaseline
+} from './baseline.js';
 import { renderBadgeSnippets } from './badges.js';
 import { loadReport, renderComparison, renderComparisonJson } from './compare.js';
 import { renderDemoWalkthrough } from './demo.js';
@@ -10,6 +18,7 @@ import { buildDoctorReport, renderDoctorReport } from './doctor.js';
 import { renderRuleExplanation } from './explain.js';
 import { renderInitGuide } from './init.js';
 import { renderPolicyPack } from './policy-packs.js';
+import { buildPolicyWizard, renderPolicyWizard } from './policy-wizard.js';
 import { renderFixDryRun } from './remediation.js';
 import { scanWorkflows, severityRank } from './scanner.js';
 import { renderTemplates } from './templates.js';
@@ -40,6 +49,8 @@ Usage:
   awguard demo
   awguard templates [all|github|code-scanning|gitlab|pre-commit|vscode]
   awguard policy-pack [oss|strict|enterprise]
+  awguard policy-wizard [path] [--config file] [--preset name] [--dry-run] [--format markdown|json] [--output file]
+  awguard baseline-review [path] --baseline file [--config file] [--preset name] [--format text|json] [--prune]
   awguard --compare previous.json current.json
 
 Examples:
@@ -50,6 +61,8 @@ Examples:
   awguard demo
   awguard templates github
   awguard policy-pack strict
+  awguard policy-wizard . --dry-run
+  awguard baseline-review . --baseline awguard.baseline.json
   awguard .
   awguard .mcp.json
   awguard . --config awguard.config.json
@@ -110,6 +123,36 @@ export async function runCli(args, env = process.env) {
 
   if (args[0] === 'policy-pack') {
     console.log(renderPolicyPack(args[1] || 'oss'));
+    return;
+  }
+
+  if (args[0] === 'policy-wizard') {
+    const options = parsePolicyWizardArgs(args.slice(1));
+    const loaded = loadConfig({ configPath: options.config, root: options.path, presets: options.presets });
+    const result = scanWorkflows({ root: options.path, config: loaded.config });
+    const wizard = buildPolicyWizard(result, { existingConfig: loaded.path ? JSON.parse(fs.readFileSync(loaded.path, 'utf8')) : {} });
+    const output = renderPolicyWizard(wizard, { format: options.format });
+    if (options.output && !options.dryRun) {
+      const outputFile = writeOutput(options.output, `${output}\n`);
+      console.error(`Wrote ${outputFile}`);
+    } else {
+      console.log(output);
+    }
+    return;
+  }
+
+  if (args[0] === 'baseline-review') {
+    const options = parseBaselineReviewArgs(args.slice(1));
+    if (!options.baseline) throw new Error('baseline-review requires --baseline file');
+    const { config } = loadConfig({ configPath: options.config, root: options.path, presets: options.presets });
+    const result = scanWorkflows({ root: options.path, config });
+    const baseline = loadBaseline(options.baseline);
+    const review = reviewBaseline(result, baseline);
+    if (options.prune) {
+      writeBaseline(options.baseline, pruneBaseline(baseline, review));
+    }
+    console.log(renderBaselineReview(review, { format: options.format, baselineFile: options.baseline }));
+    if (options.prune && options.format !== 'json') console.error(`Pruned baseline ${path.resolve(options.baseline)}`);
     return;
   }
 
@@ -277,6 +320,92 @@ function splitList(value) {
 function readBoolInput(env, name) {
   const value = readInput(env, name);
   return value === 'true' || value === '1' || value === 'yes';
+}
+
+function parsePolicyWizardArgs(args) {
+  const options = {
+    path: '.',
+    config: '',
+    presets: [],
+    dryRun: false,
+    format: 'markdown',
+    formatSpecified: false,
+    output: ''
+  };
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === '--config') {
+      options.config = args[++index];
+    } else if (arg.startsWith('--config=')) {
+      options.config = arg.slice('--config='.length);
+    } else if (arg === '--preset') {
+      options.presets.push(...splitList(args[++index]));
+    } else if (arg.startsWith('--preset=')) {
+      options.presets.push(...splitList(arg.slice('--preset='.length)));
+    } else if (arg === '--dry-run') {
+      options.dryRun = true;
+    } else if (arg === '--format') {
+      options.format = args[++index];
+      options.formatSpecified = true;
+    } else if (arg.startsWith('--format=')) {
+      options.format = arg.slice('--format='.length);
+      options.formatSpecified = true;
+    } else if (arg === '--output') {
+      options.output = args[++index];
+    } else if (arg.startsWith('--output=')) {
+      options.output = arg.slice('--output='.length);
+    } else if (!arg.startsWith('-')) {
+      options.path = arg;
+    } else {
+      throw new Error(`unknown policy-wizard option: ${arg}`);
+    }
+  }
+
+  if (options.output && !options.formatSpecified) options.format = 'json';
+  validateEnum('policy-wizard format', options.format, ['markdown', 'json']);
+  return options;
+}
+
+function parseBaselineReviewArgs(args) {
+  const options = {
+    path: '.',
+    baseline: '',
+    config: '',
+    presets: [],
+    format: 'text',
+    prune: false
+  };
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index];
+    if (arg === '--baseline') {
+      options.baseline = args[++index];
+    } else if (arg.startsWith('--baseline=')) {
+      options.baseline = arg.slice('--baseline='.length);
+    } else if (arg === '--config') {
+      options.config = args[++index];
+    } else if (arg.startsWith('--config=')) {
+      options.config = arg.slice('--config='.length);
+    } else if (arg === '--preset') {
+      options.presets.push(...splitList(args[++index]));
+    } else if (arg.startsWith('--preset=')) {
+      options.presets.push(...splitList(arg.slice('--preset='.length)));
+    } else if (arg === '--format') {
+      options.format = args[++index];
+    } else if (arg.startsWith('--format=')) {
+      options.format = arg.slice('--format='.length);
+    } else if (arg === '--prune') {
+      options.prune = true;
+    } else if (!arg.startsWith('-')) {
+      options.path = arg;
+    } else {
+      throw new Error(`unknown baseline-review option: ${arg}`);
+    }
+  }
+
+  validateEnum('baseline-review format', options.format, ['text', 'json']);
+  return options;
 }
 
 function parseBadgeArgs(args) {

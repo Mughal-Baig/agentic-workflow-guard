@@ -146,6 +146,8 @@ awguard badges [--repo OWNER/REPO] [--branch main] [--badge-file docs/awguard-ba
 awguard demo
 awguard templates [all|github|code-scanning|gitlab|pre-commit|vscode]
 awguard policy-pack [oss|strict|enterprise]
+awguard policy-wizard [path] [--dry-run] [--format markdown|json] [--output awguard.config.json]
+awguard baseline-review [path] --baseline awguard.baseline.json [--format text|json] [--prune]
 awguard --compare previous.json current.json
 ```
 
@@ -158,6 +160,8 @@ node ./bin/awguard.js badges --repo Mughal-Baig/agentic-workflow-guard --site ht
 node ./bin/awguard.js demo
 node ./bin/awguard.js templates github
 node ./bin/awguard.js policy-pack strict
+node ./bin/awguard.js policy-wizard . --dry-run
+node ./bin/awguard.js baseline-review . --baseline awguard.baseline.json
 node ./bin/awguard.js examples/unsafe-agent.yml
 node ./bin/awguard.js . --config awguard.config.json
 node ./bin/awguard.js . --preset strict --format graph
@@ -193,6 +197,16 @@ node ./bin/awguard.js . --baseline awguard.baseline.json --fail-on high
 ```
 
 The baseline stores stable finding fingerprints, not secrets or workflow contents.
+
+Review and prune stale baseline entries:
+
+```bash
+node ./bin/awguard.js baseline-review . --baseline awguard.baseline.json
+node ./bin/awguard.js baseline-review . --baseline awguard.baseline.json --format json
+node ./bin/awguard.js baseline-review . --baseline awguard.baseline.json --prune
+```
+
+`baseline-review` never rewrites the baseline unless `--prune` is present.
 
 ## Configuration
 
@@ -234,12 +248,55 @@ node ./bin/awguard.js policy-pack strict
 node ./bin/awguard.js policy-pack enterprise
 ```
 
+Generate a starter policy from the current repository surfaces:
+
+```bash
+node ./bin/awguard.js policy-wizard . --dry-run
+node ./bin/awguard.js policy-wizard . --format json --output awguard.config.json
+```
+
+Review the generated allowlists before committing them. The wizard preserves existing config fields when you pass `--config`.
+
 Generate CI and editor templates:
 
 ```bash
 node ./bin/awguard.js templates all
 node ./bin/awguard.js templates code-scanning
 node ./bin/awguard.js templates pre-commit
+```
+
+PR comment bot starter:
+
+- Copy `examples/pr-comment-bot.yml` to `.github/workflows/awguard-pr-comment.yml`.
+- It uses `pull_request`, `contents: read`, and `pull-requests: write`.
+- It only posts comments for same-repository pull requests; forked pull requests still get the scan job without exposing secrets or privileged `pull_request_target` behavior.
+
+Docker usage:
+
+```bash
+docker run --rm -v "$PWD:/repo" ghcr.io/mughal-baig/agentic-workflow-guard:latest . --preset strict
+```
+
+GitHub Actions Docker job:
+
+```yaml
+jobs:
+  awguard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - run: docker run --rm -v "$PWD:/repo" ghcr.io/mughal-baig/agentic-workflow-guard:latest . --preset strict --fail-on high
+```
+
+GitLab CI container job:
+
+```yaml
+awguard:
+  image:
+    name: ghcr.io/mughal-baig/agentic-workflow-guard:latest
+    entrypoint: [""]
+  script:
+    - awguard . --preset strict --fail-on high
 ```
 
 Built-in presets:

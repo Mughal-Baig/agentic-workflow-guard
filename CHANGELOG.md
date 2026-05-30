@@ -15,6 +15,9 @@
 - Add machine-readable remediation codes to JSON and SARIF findings.
 - Add scan guardrails for maximum discovered files and maximum scanned file size.
 - Add end-to-end golden tests for unsafe/fixed labs, compare, inventory, and score outputs.
+- Add `awguard baseline-review` with explicit `--prune` support for stale baselines.
+- Add `awguard policy-wizard` for reviewed policy allowlist starter configs.
+- Add a safe PR comment workflow example and Docker image publishing workflow.
 - Add `schemas/awguard.config.schema.json` for editor validation of AWGuard config files.
 - Add schemas for JSON scan reports, inventories, comparisons, baselines, and badge endpoints.
 - Add compare report surface diffs and `--compare ... --format json`.

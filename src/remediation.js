@@ -73,6 +73,21 @@ const fixCatalog = {
     'Review the new agentic surface before approving it in policy.',
     'Add reviewed files to policy.approvedFiles and reviewed MCP tools to the MCP policy allowlists.',
     'Remove or quarantine unapproved workflows, agent instructions, prompts, skills, and MCP configs.'
+  ],
+  AWG016: [
+    'Set actions/checkout persist-credentials: false in agent jobs.',
+    'Use read-only permissions for analysis jobs.',
+    'Move writeback to a separate reviewed job with an explicit branch or pull request boundary.'
+  ],
+  AWG017: [
+    'Push agent changes to a short-lived branch instead of main.',
+    'Open a draft pull request for maintainer review.',
+    'Use artifacts for generated patches when the workflow should not write to the repository.'
+  ],
+  AWG018: [
+    'Move untrusted event text into a reviewed input file before MCP tool use.',
+    'Sanitize issue, PR, comment, branch, and workflow_dispatch input text before passing it to MCP tools.',
+    'Keep MCP tool calls read-only unless a maintainer approves the request.'
   ]
 };
 
@@ -197,6 +212,37 @@ run: |
     "approvedMcpCommands": ["npx", "node"]
   }
 }`
+    };
+  }
+
+  if (finding.ruleId === 'AWG016') {
+    return {
+      language: 'yaml',
+      text: `- uses: actions/checkout@v6
+  with:
+    persist-credentials: false`
+    };
+  }
+
+  if (finding.ruleId === 'AWG017') {
+    return {
+      language: 'yaml',
+      text: `run: |
+  git switch -c awguard/agent-output
+  git commit -am "Propose agent changes"
+  git push origin HEAD:awguard/agent-output
+  gh pr create --draft --fill`
+    };
+  }
+
+  if (finding.ruleId === 'AWG018') {
+    return {
+      language: 'yaml',
+      text: `env:
+  UNTRUSTED_TEXT: \${{ github.event.comment.body }}
+run: |
+  printf '%s\\n' "$UNTRUSTED_TEXT" > untrusted-input.txt
+  codex mcp run github --input reviewed-request.json`
     };
   }
 

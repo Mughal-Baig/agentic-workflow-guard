@@ -1,0 +1,43 @@
+name: AWGuard PR Comment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  awguard-comment:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Scan agentic surfaces
+        run: npx awguard@latest . --preset strict --format json --output awguard-report.json --fail-on none
+      - name: Build PR comment
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const report = JSON.parse(fs.readFileSync('awguard-report.json', 'utf8'));
+          const top = report.findings.slice(0, 8);
+          const lines = [
+            '## Agentic Workflow Guard',
+            '',
+            `Findings: **${report.summary.total}**`,
+            `Highest severity: **${report.summary.highest}**`,
+            '',
+            top.length === 0 ? 'No AWGuard findings in this pull request.' : '| Severity | Rule | Location | Finding |',
+            top.length === 0 ? '' : '| --- | --- | --- | --- |',
+            ...top.map((finding) => `| ${finding.severity} | ${finding.ruleId} | \`${finding.file}:${finding.line}\` | ${finding.title} |`)
+          ].filter(Boolean);
+          fs.writeFileSync('awguard-comment.md', `${lines.join('\n')}\n`);
+          NODE
+      - name: Comment on same-repository pull requests
+        if: github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: gh pr comment "$PR_NUMBER" --body-file awguard-comment.md
