@@ -55,7 +55,7 @@ Primary value points:
 3. Push `main`.
 4. Create a GitHub tag such as `v1.7.0`.
 5. Create a GitHub Release from the tag.
-6. Confirm `npm-publish.yml` publishes `awguard`.
+6. Confirm `npm-publish.yml` either publishes `awguard` or cleanly skips release auto-publish until `NPM_TRUSTED_PUBLISHING_ENABLED=true`.
 7. Confirm `docker.yml` publishes GHCR images.
 8. Update the moving `v0` action tag if the Action entrypoint changed.
 9. Confirm `npx awguard@latest . --version` or `npm view awguard version`.

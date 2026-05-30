@@ -40,9 +40,13 @@ It:
 
 - Runs only on GitHub-hosted runners.
 - Uses `permissions: id-token: write`.
+- Skips release-triggered publishing until the repository variable `NPM_TRUSTED_PUBLISHING_ENABLED` is set to `true`.
+- Detects an already-published package version and exits cleanly instead of failing a release run.
 - Runs tests before publishing.
 - Publishes with `npm publish --access public`.
 - Avoids storing `NPM_TOKEN`.
+
+Set `NPM_TRUSTED_PUBLISHING_ENABLED=true` only after the npm Trusted Publisher settings are configured for this repository and workflow. Until then, use the manual fallback or run the workflow manually after verifying publishing access.
 
 ## Maintainer Release Checklist
 
@@ -51,7 +55,7 @@ It:
 3. Update `CHANGELOG.md`.
 4. Bump `package.json` version.
 5. Commit and push.
-6. Create a GitHub Release or run the workflow manually.
+6. Create a GitHub Release or run the workflow manually. If trusted publishing is not enabled yet, publish manually and leave `NPM_TRUSTED_PUBLISHING_ENABLED` unset.
 7. Confirm the package appears on npm.
 8. Confirm npm shows provenance for the version.
 9. Confirm GitHub Actions, Code Scanning, and Docker image workflows pass.

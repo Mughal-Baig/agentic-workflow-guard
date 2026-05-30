@@ -10,9 +10,20 @@ permissions:
   id-token: write
 
 jobs:
+  release-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Explain release publish gate
+        if: github.event_name == 'release' && vars.NPM_TRUSTED_PUBLISHING_ENABLED != 'true'
+        run: echo "Release auto-publish is disabled until npm trusted publishing is configured and NPM_TRUSTED_PUBLISHING_ENABLED=true."
+      - name: Confirm publish path
+        if: github.event_name == 'workflow_dispatch' || vars.NPM_TRUSTED_PUBLISHING_ENABLED == 'true'
+        run: echo "npm publish workflow is enabled for this run."
+
   publish:
     runs-on: ubuntu-latest
-    if: github.repository == 'Mughal-Baig/agentic-workflow-guard'
+    needs: release-gate
+    if: github.repository == 'Mughal-Baig/agentic-workflow-guard' && (github.event_name == 'workflow_dispatch' || vars.NPM_TRUSTED_PUBLISHING_ENABLED == 'true')
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -20,5 +31,21 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
+      - name: Read package identity
+        id: package
+        run: |
+          node -e "const p = require('./package.json'); console.log('name=' + p.name); console.log('version=' + p.version)" >> "$GITHUB_OUTPUT"
+      - name: Check whether this version is already published
+        id: published
+        run: |
+          if npm view "${{ steps.package.outputs.name }}@${{ steps.package.outputs.version }}" version >/tmp/awguard-npm-version 2>/dev/null; then
+            echo "published=true" >> "$GITHUB_OUTPUT"
+            echo "Package version already exists on npm: $(cat /tmp/awguard-npm-version)"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+            echo "Package version is not published yet."
+          fi
       - run: npm test
+        if: steps.published.outputs.published != 'true'
       - run: npm publish --access public
+        if: steps.published.outputs.published != 'true'
